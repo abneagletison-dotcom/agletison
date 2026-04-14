@@ -49,7 +49,7 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
 <script>
-    // CHAVES DO SEU PROJETO MAPANISIA (IMAGEM 72D69F)
+    // CONFIGURAÇÃO DO SEU PROJETO MAPANISIA
     const firebaseConfig = {
       apiKey: "AIzaSyBuVx3VYGHF97hU9-CSLa-FmSbxFYIH20A",
       authDomain: "mapanisia.firebaseapp.com",
@@ -59,14 +59,16 @@
       appId: "1:429106374611:web:b0fc107917f26bec3cb126"
     };
 
+    // Inicializando Firebase e Mapa
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
     const storage = firebase.storage();
-    const map = L.map('map').setView([-6.0886, -35.2111], 14);
+    const map = L.map('map').setView([-6.0886, -35.2111], 14); // Focado em Nísia Floresta
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
     let marcadoresAtivos = [];
 
+    // Gerenciador de Login
     firebase.auth().onAuthStateChanged(user => {
         if (user) {
             document.getElementById('login-area').style.display = 'none';
@@ -81,35 +83,50 @@
     async function fazerLogin() {
         const email = document.getElementById('email').value;
         const pass = document.getElementById('password').value;
-        try { await firebase.auth().signInWithEmailAndPassword(email, pass); } 
-        catch (e) { alert("Erro de acesso. Verifique se criou o usuário no Firebase."); }
+        try { 
+            await firebase.auth().signInWithEmailAndPassword(email, pass); 
+        } catch (e) { 
+            alert("Erro: Verifique se criou o usuário no Firebase Authentication."); 
+        }
     }
 
+    // Função para salvar no Banco de Dados
     async function salvarLocalizacao() {
         const nome = document.getElementById('nome').value;
         const whats = document.getElementById('whatsapp').value;
         const arquivo = document.getElementById('foto').files[0];
-        if (!nome || !whats || !arquivo) return alert("Preencha todos os campos e tire a foto!");
+        if (!nome || !whats || !arquivo) return alert("Preencha todos os campos!");
 
         document.getElementById('loading').style.display = 'block';
         document.getElementById('btn-salvar').disabled = true;
 
         navigator.geolocation.getCurrentPosition(async (pos) => {
-            const { latitude, longitude } = pos.coords;
-            const ref = storage.ref(`fotos/${Date.now()}_${arquivo.name}`);
-            await ref.put(arquivo);
-            const url = await ref.getDownloadURL();
+            try {
+                const { latitude, longitude } = pos.coords;
+                const ref = storage.ref(`fotos/${Date.now()}_${arquivo.name}`);
+                await ref.put(arquivo);
+                const url = await ref.getDownloadURL();
 
-            await db.collection("pontos").add({
-                nome, whatsapp: whats.replace(/\D/g,''), foto: url,
-                lat: latitude, lng: longitude, data: new Date()
-            });
+                await db.collection("pontos").add({
+                    nome, 
+                    whatsapp: whats.replace(/\D/g,''), 
+                    foto: url,
+                    lat: latitude, 
+                    lng: longitude, 
+                    data: new Date()
+                });
 
-            alert("Sucesso!");
-            location.reload();
+                alert("Localização salva!");
+                location.reload();
+            } catch (err) {
+                alert("Erro ao salvar. Verifique as regras do Firebase.");
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('btn-salvar').disabled = false;
+            }
         });
     }
 
+    // Carregar pontos existentes no mapa
     function carregarDados() {
         db.collection("pontos").onSnapshot(snap => {
             marcadoresAtivos.forEach(m => map.removeLayer(m.marker));
@@ -117,12 +134,17 @@
             snap.forEach(doc => {
                 const d = doc.data();
                 const marker = L.marker([d.lat, d.lng]).addTo(map)
-                    .bindPopup(`<b>${d.nome}</b><br><a href="https://wa.me/55${d.whatsapp}" target="_blank">WhatsApp</a><br><img src="${d.foto}" class="popup-img">`);
+                    .bindPopup(`
+                        <b>${d.nome}</b><br>
+                        <a href="https://wa.me/55${d.whatsapp}" target="_blank" style="color:green; font-weight:bold;">Chamar WhatsApp</a><br>
+                        <img src="${d.foto}" class="popup-img">
+                    `);
                 marcadoresAtivos.push({ nome: d.nome.toLowerCase(), marker });
             });
         });
     }
 
+    // Função de Busca
     function filtrarMarcadores() {
         const busca = document.getElementById('nome-busca').value.toLowerCase();
         marcadoresAtivos.forEach(m => {
