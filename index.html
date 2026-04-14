@@ -9,12 +9,15 @@
         body { font-family: sans-serif; margin: 0; background: #f4f4f4; }
         #map { height: 45vh; width: 100%; border-bottom: 3px solid #004a8d; }
         .container { padding: 15px; max-width: 450px; margin: auto; }
-        .card { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .card { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); text-align: center; }
         input, button { width: 100%; padding: 12px; margin: 8px 0; border-radius: 5px; border: 1px solid #ccc; box-sizing: border-box; font-size: 16px; }
-        button { background: #004a8d; color: white; border: none; font-weight: bold; cursor: pointer; }
+        button { background: #004a8d; color: white; border: none; font-weight: bold; cursor: pointer; transition: 0.3s; }
+        button:hover { background: #003366; }
+        .btn-google { background: #db4437; margin-top: 10px; }
         .btn-checkin { background: #25D366; }
         .popup-img { width: 100%; border-radius: 5px; margin-top: 10px; }
-        #loading { display: none; text-align: center; color: #004a8d; font-weight: bold; }
+        #loading { display: none; color: #004a8d; font-weight: bold; margin: 10px 0; }
+        hr { border: 0; border-top: 1px solid #eee; margin: 20px 0; }
     </style>
 </head>
 <body>
@@ -26,19 +29,23 @@
         <h3>Acesso Mapa Nisia</h3>
         <input type="email" id="email" placeholder="E-mail">
         <input type="password" id="password" placeholder="Senha">
-        <button onclick="fazerLogin()">Entrar</button>
+        <button onclick="fazerLogin()">Entrar com E-mail</button>
+        
+        <div style="margin: 10px 0; color: #666;">ou</div>
+        
+        <button class="btn-google" onclick="loginGoogle()">Entrar com Google G</button>
     </div>
 
     <div id="app-area" class="card" style="display:none;">
-        <input type="text" id="nome-busca" placeholder="🔍 Buscar por nome..." oninput="filtrarMarcadores()" style="background: #eef;">
+        <input type="text" id="nome-busca" placeholder="🔍 Buscar morador..." oninput="filtrarMarcadores()" style="background: #eef;">
         <hr>
-        <h3>Novo Registro</h3>
-        <input type="text" id="nome" placeholder="Nome do Morador/Cliente">
+        <h3>Novo Registro 📍</h3>
+        <input type="text" id="nome" placeholder="Nome do Cliente">
         <input type="tel" id="whatsapp" placeholder="WhatsApp (ex: 84987099439)">
         <input type="file" id="foto" accept="image/*">
-        <div id="loading">Enviando dados... 📍</div>
+        <div id="loading">Processando... aguarde ⏳</div>
         <button class="btn-checkin" id="btn-salvar" onclick="salvarLocalizacao()">📍 Salvar Localização Atual</button>
-        <button onclick="firebase.auth().signOut()" style="background:#666; font-size:12px; margin-top:20px;">Sair</button>
+        <button onclick="firebase.auth().signOut()" style="background:#666; font-size:12px; margin-top:20px;">Sair da Conta</button>
     </div>
 </div>
 
@@ -49,7 +56,7 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
 <script>
-    // CONFIGURAÇÃO DO SEU PROJETO MAPANISIA
+    // Configurações do seu projeto Mapanisia
     const firebaseConfig = {
       apiKey: "AIzaSyBuVx3VYGHF97hU9-CSLa-FmSbxFYIH20A",
       authDomain: "mapanisia.firebaseapp.com",
@@ -59,17 +66,19 @@
       appId: "1:429106374611:web:b0fc107917f26bec3cb126"
     };
 
-    // Inicializando Firebase e Mapa
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
     const storage = firebase.storage();
-    const map = L.map('map').setView([-6.0886, -35.2111], 14); // Focado em Nísia Floresta
+    const auth = firebase.auth();
+
+    // Inicializar Mapa
+    const map = L.map('map').setView([-6.0886, -35.2111], 14);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
     let marcadoresAtivos = [];
 
-    // Gerenciador de Login
-    firebase.auth().onAuthStateChanged(user => {
+    // Monitorar estado do Login
+    auth.onAuthStateChanged(user => {
         if (user) {
             document.getElementById('login-area').style.display = 'none';
             document.getElementById('app-area').style.display = 'block';
@@ -80,22 +89,36 @@
         }
     });
 
+    // Login com E-mail
     async function fazerLogin() {
         const email = document.getElementById('email').value;
         const pass = document.getElementById('password').value;
         try { 
-            await firebase.auth().signInWithEmailAndPassword(email, pass); 
+            await auth.signInWithEmailAndPassword(email, pass); 
         } catch (e) { 
-            alert("Erro: Verifique se criou o usuário no Firebase Authentication."); 
+            console.error(e);
+            alert("Erro no Login: " + e.message); 
         }
     }
 
-    // Função para salvar no Banco de Dados
+    // Login com Google
+    async function loginGoogle() {
+        const provider = new firebase.auth.GoogleAuthProvider();
+        try {
+            await auth.signInWithPopup(provider);
+        } catch (e) {
+            console.error(e);
+            alert("Erro Google: Verifique se ativou o provedor Google no Firebase.");
+        }
+    }
+
+    // Salvar Localização e Foto
     async function salvarLocalizacao() {
         const nome = document.getElementById('nome').value;
         const whats = document.getElementById('whatsapp').value;
         const arquivo = document.getElementById('foto').files[0];
-        if (!nome || !whats || !arquivo) return alert("Preencha todos os campos!");
+        
+        if (!nome || !whats) return alert("Preencha o nome e o WhatsApp!");
 
         document.getElementById('loading').style.display = 'block';
         document.getElementById('btn-salvar').disabled = true;
@@ -103,32 +126,48 @@
         navigator.geolocation.getCurrentPosition(async (pos) => {
             try {
                 const { latitude, longitude } = pos.coords;
-                const ref = storage.ref(`fotos/${Date.now()}_${arquivo.name}`);
-                await ref.put(arquivo);
-                const url = await ref.getDownloadURL();
+                let url = "";
 
+                // Se tiver foto, envia para o Storage
+                if (arquivo) {
+                    const ref = storage.ref(`fotos/${Date.now()}_${arquivo.name}`);
+                    await ref.put(arquivo);
+                    url = await ref.getDownloadURL();
+                }
+
+                // Salva no Firestore
                 await db.collection("pontos").add({
                     nome, 
                     whatsapp: whats.replace(/\D/g,''), 
                     foto: url,
                     lat: latitude, 
                     lng: longitude, 
+                    usuario: auth.currentUser.email,
                     data: new Date()
                 });
 
-                alert("Localização salva!");
-                location.reload();
+                alert("Salvo com sucesso em Nísia Floresta!");
+                document.getElementById('nome').value = "";
+                document.getElementById('whatsapp').value = "";
+                document.getElementById('foto').value = "";
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('btn-salvar').disabled = false;
             } catch (err) {
-                alert("Erro ao salvar. Verifique as regras do Firebase.");
+                console.error(err);
+                alert("Erro ao salvar: Verifique as Regras do Firestore e Storage.");
                 document.getElementById('loading').style.display = 'none';
                 document.getElementById('btn-salvar').disabled = false;
             }
+        }, (error) => {
+            alert("Erro: Ative o GPS do seu celular!");
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('btn-salvar').disabled = false;
         });
     }
 
-    // Carregar pontos existentes no mapa
+    // Carregar pontos no mapa
     function carregarDados() {
-        db.collection("pontos").onSnapshot(snap => {
+        db.collection("pontos").orderBy("data", "desc").onSnapshot(snap => {
             marcadoresAtivos.forEach(m => map.removeLayer(m.marker));
             marcadoresAtivos = [];
             snap.forEach(doc => {
@@ -136,15 +175,14 @@
                 const marker = L.marker([d.lat, d.lng]).addTo(map)
                     .bindPopup(`
                         <b>${d.nome}</b><br>
-                        <a href="https://wa.me/55${d.whatsapp}" target="_blank" style="color:green; font-weight:bold;">Chamar WhatsApp</a><br>
-                        <img src="${d.foto}" class="popup-img">
+                        <a href="https://wa.me/55${d.whatsapp}" target="_blank" style="color:green; font-weight:bold;">WhatsApp</a><br>
+                        ${d.foto ? `<img src="${d.foto}" class="popup-img">` : "Sem foto"}
                     `);
                 marcadoresAtivos.push({ nome: d.nome.toLowerCase(), marker });
             });
         });
     }
 
-    // Função de Busca
     function filtrarMarcadores() {
         const busca = document.getElementById('nome-busca').value.toLowerCase();
         marcadoresAtivos.forEach(m => {
