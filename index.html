@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mapa Nisia - SpeedNET</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        body { font-family: sans-serif; margin: 0; background: #f4f4f4; }
+        #map { height: 45vh; width: 100%; border-bottom: 3px solid #004a8d; }
+        .container { padding: 15px; max-width: 450px; margin: auto; }
+        .card { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        input, button { width: 100%; padding: 12px; margin: 8px 0; border-radius: 5px; border: 1px solid #ccc; box-sizing: border-box; font-size: 16px; }
+        button { background: #004a8d; color: white; border: none; font-weight: bold; cursor: pointer; }
+        .btn-checkin { background: #25D366; }
+        .popup-img { width: 100%; border-radius: 5px; margin-top: 10px; }
+        #loading { display: none; text-align: center; color: #004a8d; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<div id="map"></div>
+
+<div class="container">
+    <div id="login-area" class="card">
+        <h3>Acesso Mapa Nisia</h3>
+        <input type="email" id="email" placeholder="E-mail">
+        <input type="password" id="password" placeholder="Senha">
+        <button onclick="fazerLogin()">Entrar</button>
+    </div>
+
+    <div id="app-area" class="card" style="display:none;">
+        <input type="text" id="nome-busca" placeholder="🔍 Buscar por nome..." oninput="filtrarMarcadores()" style="background: #eef;">
+        <hr>
+        <h3>Novo Registro</h3>
+        <input type="text" id="nome" placeholder="Nome do Morador/Cliente">
+        <input type="tel" id="whatsapp" placeholder="WhatsApp (ex: 84987099439)">
+        <input type="file" id="foto" accept="image/*">
+        <div id="loading">Enviando dados... 📍</div>
+        <button class="btn-checkin" id="btn-salvar" onclick="salvarLocalizacao()">📍 Salvar Localização Atual</button>
+        <button onclick="firebase.auth().signOut()" style="background:#666; font-size:12px; margin-top:20px;">Sair</button>
+    </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-storage-compat.js"></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<script>
+    // CHAVES DO SEU PROJETO MAPANISIA (IMAGEM 72D69F)
+    const firebaseConfig = {
+      apiKey: "AIzaSyBuVx3VYGHF97hU9-CSLa-FmSbxFYIH20A",
+      authDomain: "mapanisia.firebaseapp.com",
+      projectId: "mapanisia",
+      storageBucket: "mapanisia.firebasestorage.app",
+      messagingSenderId: "429106374611",
+      appId: "1:429106374611:web:b0fc107917f26bec3cb126"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+    const storage = firebase.storage();
+    const map = L.map('map').setView([-6.0886, -35.2111], 14);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+
+    let marcadoresAtivos = [];
+
+    firebase.auth().onAuthStateChanged(user => {
+        if (user) {
+            document.getElementById('login-area').style.display = 'none';
+            document.getElementById('app-area').style.display = 'block';
+            carregarDados();
+        } else {
+            document.getElementById('login-area').style.display = 'block';
+            document.getElementById('app-area').style.display = 'none';
+        }
+    });
+
+    async function fazerLogin() {
+        const email = document.getElementById('email').value;
+        const pass = document.getElementById('password').value;
+        try { await firebase.auth().signInWithEmailAndPassword(email, pass); } 
+        catch (e) { alert("Erro de acesso. Verifique se criou o usuário no Firebase."); }
+    }
+
+    async function salvarLocalizacao() {
+        const nome = document.getElementById('nome').value;
+        const whats = document.getElementById('whatsapp').value;
+        const arquivo = document.getElementById('foto').files[0];
+        if (!nome || !whats || !arquivo) return alert("Preencha todos os campos e tire a foto!");
+
+        document.getElementById('loading').style.display = 'block';
+        document.getElementById('btn-salvar').disabled = true;
+
+        navigator.geolocation.getCurrentPosition(async (pos) => {
+            const { latitude, longitude } = pos.coords;
+            const ref = storage.ref(`fotos/${Date.now()}_${arquivo.name}`);
+            await ref.put(arquivo);
+            const url = await ref.getDownloadURL();
+
+            await db.collection("pontos").add({
+                nome, whatsapp: whats.replace(/\D/g,''), foto: url,
+                lat: latitude, lng: longitude, data: new Date()
+            });
+
+            alert("Sucesso!");
+            location.reload();
+        });
+    }
+
+    function carregarDados() {
+        db.collection("pontos").onSnapshot(snap => {
+            marcadoresAtivos.forEach(m => map.removeLayer(m.marker));
+            marcadoresAtivos = [];
+            snap.forEach(doc => {
+                const d = doc.data();
+                const marker = L.marker([d.lat, d.lng]).addTo(map)
+                    .bindPopup(`<b>${d.nome}</b><br><a href="https://wa.me/55${d.whatsapp}" target="_blank">WhatsApp</a><br><img src="${d.foto}" class="popup-img">`);
+                marcadoresAtivos.push({ nome: d.nome.toLowerCase(), marker });
+            });
+        });
+    }
+
+    function filtrarMarcadores() {
+        const busca = document.getElementById('nome-busca').value.toLowerCase();
+        marcadoresAtivos.forEach(m => {
+            if (m.nome.includes(busca)) { m.marker.addTo(map); } 
+            else { map.removeLayer(m.marker); }
+        });
+    }
+</script>
+</body>
+</html>
