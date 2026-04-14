@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mapa Nisia - Motorista Shopee</title>
+    <title>Mapa Nisia - SpeedNET</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
         body { font-family: sans-serif; margin: 0; background: #f4f4f4; }
@@ -94,14 +94,12 @@
 
     let marcadoresAtivos = [];
 
-    // Alternar entre Login e Cadastro
     function toggleAuth(isRegister) {
         document.getElementById('auth-title').innerText = isRegister ? "Criar Nova Conta" : "Acesso Mapa Nisia";
         document.getElementById('login-buttons').style.display = isRegister ? "none" : "block";
         document.getElementById('register-buttons').style.display = isRegister ? "block" : "none";
     }
 
-    // Monitorar Login
     auth.onAuthStateChanged(user => {
         if (user) {
             document.getElementById('auth-area').style.display = 'none';
@@ -133,7 +131,7 @@
     async function loginGoogle() {
         const provider = new firebase.auth.GoogleAuthProvider();
         try { await auth.signInWithPopup(provider); } 
-        catch (e) { alert("Erro no Google Login. Verifique se ativou o suporte de e-mail no Firebase."); }
+        catch (e) { alert("Erro no Google Login."); }
     }
 
     async function salvarLocalizacao() {
