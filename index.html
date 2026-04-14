@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mapa SpeedNET - RealTime</title>
+    <title>Mapa SpeedNET - Gestão Completa</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
         body { font-family: sans-serif; margin: 0; background: #f4f4f4; overflow-x: hidden; }
@@ -13,38 +13,28 @@
         input, button { width: 100%; padding: 12px; margin: 5px 0; border-radius: 5px; border: 1px solid #ccc; box-sizing: border-box; font-size: 16px; }
         button { background: #004a8d; color: white; border: none; font-weight: bold; cursor: pointer; }
         .btn-salvar { background: #25D366; margin-top: 10px; }
-        .btn-navegar { background: #007bff; color: white; padding: 10px; text-decoration: none; border-radius: 5px; display: block; margin-top: 10px; font-size: 14px; font-weight: bold; }
+        .btn-checkin { background: #6f42c1; color: white; margin-top: 5px; display: none; } /* Botão roxo para Check-in */
+        .btn-navegar { background: #007bff; color: white; padding: 8px; text-decoration: none; border-radius: 5px; display: block; margin-top: 8px; font-size: 13px; font-weight: bold; }
+        .btn-edit { background: #ffc107; color: #000; font-size: 12px; padding: 5px; margin-top: 5px; width: 48%; float: left; }
+        .btn-del { background: #dc3545; color: #fff; font-size: 12px; padding: 5px; margin-top: 5px; width: 48%; float: right; }
         #loading { display: none; color: #004a8d; font-weight: bold; margin: 10px 0; }
-        
-        /* Estilos de Foto e Miniatura */
         .popup-mini-foto { width: 70px; height: 70px; border-radius: 50%; object-fit: cover; border: 3px solid #004a8d; cursor: pointer; display: block; margin: 5px auto; }
         .file-label { display: block; background: #f1f1f1; border: 1px dashed #bbb; padding: 15px; border-radius: 5px; cursor: pointer; margin-top: 10px; color: #555; }
         #file-foto { display: none; }
         .foto-preview { width: 100%; height: auto; margin: 10px 0; border-radius: 5px; display: none; border: 2px solid #ddd; }
-
-        /* Estilo Rodapé (Redes Sociais) */
-        .footer-credits { margin-top: 30px; padding: 20px; text-align: center; border-top: 1px solid #ddd; color: #555; font-size: 14px; }
-        .social-links { display: flex; justify-content: center; gap: 15px; margin-top: 10px; }
-        .social-links a { text-decoration: none; font-weight: bold; color: white; padding: 8px 15px; border-radius: 20px; font-size: 13px; display: flex; align-items: center; }
-        .insta-link { background: #E1306C; }
-        .whats-link { background: #25D366; }
-
-        /* Overlay Zoom */
+        .footer-credits { margin-top: 30px; text-align: center; color: #555; font-size: 14px; }
         .overlay-foto { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 9999; justify-content: center; align-items: center; }
         .overlay-foto img { max-width: 95%; max-height: 95%; border-radius: 10px; }
     </style>
 </head>
 <body>
 
-<div id="overlay-zoom" class="overlay-foto" onclick="this.style.display='none'">
-    <img id="img-zoom" src="">
-</div>
-
+<div id="overlay-zoom" class="overlay-foto" onclick="this.style.display='none'"><img id="img-zoom" src=""></div>
 <div id="map"></div>
 
 <div class="container">
     <div id="identificacao-area" class="card">
-        <h3>Identificação do Técnico</h3>
+        <h3>Identificação SpeedNET</h3>
         <input type="text" id="nome-usuario" placeholder="Seu nome (Ex: Marcio)">
         <button onclick="acessarMapa()">ENTRAR</button>
     </div>
@@ -52,30 +42,28 @@
     <div id="app-area" class="card" style="display:none;">
         <input type="text" id="nome-busca" placeholder="🔍 Buscar cliente..." oninput="filtrarMarcadores()">
         <hr>
-        <h3>📍 Registrar Cliente</h3>
-        <input type="text" id="nome-cliente" placeholder="Nome do Cliente">
-        <input type="tel" id="whats-cliente" placeholder="WhatsApp do Cliente">
+        <h3 id="form-title">📍 Registrar Cliente</h3>
+        <input type="hidden" id="edit-id">
+        <input type="hidden" id="edit-lat"> <input type="hidden" id="edit-lng"> <input type="text" id="nome-cliente" placeholder="Nome do Cliente">
+        <input type="tel" id="whats-cliente" placeholder="WhatsApp">
         <input type="text" id="rua-cliente" placeholder="Rua">
         <input type="text" id="bairro-cliente" placeholder="Bairro">
         <input type="text" id="ref-cliente" placeholder="Ponto de Referência">
 
-        <label for="file-foto" class="file-label">
-            📷 Adicionar Foto da Localização
-            <input type="file" id="file-foto" accept="image/*" onchange="previewFoto()">
-        </label>
+        <label for="file-foto" class="file-label">📷 Adicionar Foto (Câmera ou Galeria)<input type="file" id="file-foto" accept="image/*" capture="environment" onchange="previewFoto()"></label>
         <img id="prev-foto" class="foto-preview">
 
-        <div id="loading">Salvando GPS e Foto... ⏳</div>
-        <button class="btn-salvar" onclick="salvarLocalizacao()">SALVAR LOCALIZAÇÃO</button>
+        <div id="loading">Processando... ⏳</div>
+        
+        <button id="btn-checkin" class="btn-checkin" onclick="atualizarPosicaoEdicao()">📍 ATUALIZAR GPS (CHECK-IN)</button>
+        
+        <button id="btn-acao" class="btn-salvar" onclick="salvarLocalizacao()">SALVAR TUDO</button>
+        <button id="btn-cancelar" style="display:none; background:#666;" onclick="cancelarEdicao()">CANCELAR EDIÇÃO</button>
     </div>
 
     <div class="footer-credits">
-        Criado por <strong>Abne Agletison</strong><br>
-        Envie sugestões aqui:
-        <div class="social-links">
-            <a href="https://instagram.com/Agletison" target="_blank" class="insta-link">@Agletison</a>
-            <a href="https://wa.me/5584987099439" target="_blank" class="whats-link">WhatsApp</a>
-        </div>
+        Criado por <strong>Abne Agletison</strong> | <a href="https://instagram.com/Agletison" target="_blank">@Agletison</a><br>
+        Suporte: <a href="https://wa.me/5584987099439" target="_blank">(84) 98709-9439</a>
     </div>
 </div>
 
@@ -131,36 +119,65 @@
 
     function monitorarPosicao() {
         navigator.geolocation.watchPosition(pos => {
-            const lat = pos.coords.latitude;
-            const lng = pos.coords.longitude;
+            const lat = pos.coords.latitude, lng = pos.coords.longitude;
             if (marcadorVoce) { marcadorVoce.setLatLng([lat, lng]); } 
             else { marcadorVoce = L.circleMarker([lat, lng], { radius: 10, fillColor: '#007bff', fillOpacity: 1, color: 'white', weight: 2 }).addTo(map); }
         }, null, { enableHighAccuracy: true });
     }
 
+    // Função para pegar a nova posição durante a edição
+    function atualizarPosicaoEdicao() {
+        document.getElementById('loading').style.display = 'block';
+        navigator.geolocation.getCurrentPosition(pos => {
+            document.getElementById('edit-lat').value = pos.coords.latitude;
+            document.getElementById('edit-lng').value = pos.coords.longitude;
+            document.getElementById('loading').style.display = 'none';
+            alert("Localização atualizada com sucesso! Não esqueça de Salvar Tudo.");
+        });
+    }
+
     async function salvarLocalizacao() {
         const cliente = document.getElementById('nome-cliente').value;
+        const editId = document.getElementById('edit-id').value;
         const arquivo = document.getElementById('file-foto').files[0];
         if (!cliente) return alert("Nome do cliente obrigatório!");
 
         document.getElementById('loading').style.display = 'block';
-        navigator.geolocation.getCurrentPosition(async (pos) => {
-            try {
-                let urlFoto = "";
-                if (arquivo) {
-                    const ref = storage.ref(`fotos/${Date.now()}`);
-                    await ref.put(arquivo);
-                    urlFoto = await ref.getDownloadURL();
-                }
-                await db.collection("pontos").add({
-                    nome: cliente, whatsapp: document.getElementById('whats-cliente').value,
-                    rua: document.getElementById('rua-cliente').value, bairro: document.getElementById('bairro-cliente').value,
-                    referencia: document.getElementById('ref-cliente').value, foto: urlFoto,
-                    registrado_por: localStorage.getItem('usuario_mapa'), lat: pos.coords.latitude, lng: pos.coords.longitude, data: new Date()
+        
+        const dados = {
+            nome: cliente, whatsapp: document.getElementById('whats-cliente').value,
+            rua: document.getElementById('rua-cliente').value, bairro: document.getElementById('bairro-cliente').value,
+            referencia: document.getElementById('ref-cliente').value,
+            registrado_por: localStorage.getItem('usuario_mapa'),
+            data_atualizacao: new Date()
+        };
+
+        try {
+            if (arquivo) {
+                const ref = storage.ref(`fotos/${Date.now()}`);
+                await ref.put(arquivo);
+                dados.foto = await ref.getDownloadURL();
+            }
+
+            if (editId) {
+                // Usa a lat/lng que estiver nos campos ocultos (original ou nova do check-in)
+                dados.lat = parseFloat(document.getElementById('edit-lat').value);
+                dados.lng = parseFloat(document.getElementById('edit-lng').value);
+                await db.collection("pontos").doc(editId).update(dados);
+                alert("Atualizado com sucesso!");
+            } else {
+                navigator.geolocation.getCurrentPosition(async (pos) => {
+                    dados.lat = pos.coords.latitude;
+                    dados.lng = pos.coords.longitude;
+                    dados.data = new Date();
+                    await db.collection("pontos").add(dados);
+                    alert("Salvo!");
+                    location.reload();
                 });
-                alert("Salvo!"); location.reload();
-            } catch (err) { alert("Erro ao salvar."); }
-        });
+                return;
+            }
+            location.reload();
+        } catch (err) { alert("Erro na operação."); }
     }
 
     function carregarDados() {
@@ -168,17 +185,47 @@
             marcadoresAtivos.forEach(m => map.removeLayer(m.marker));
             snap.forEach(doc => {
                 const d = doc.data();
+                const id = doc.id;
                 const linkNav = `https://www.google.com/maps/dir/?api=1&destination=${d.lat},${d.lng}`;
                 let htmlFoto = d.foto ? `<img src="${d.foto}" class="popup-mini-foto" onclick="document.getElementById('img-zoom').src='${d.foto}'; document.getElementById('overlay-zoom').style.display='flex'">` : '';
 
                 const marker = L.marker([d.lat, d.lng]).addTo(map).bindPopup(`
                     ${htmlFoto}
-                    <b>${d.nome}</b><br>📍 ${d.rua || ''} - ${d.bairro || ''}<br>👤 Técnico: ${d.registrado_por}<br>
+                    <b>${d.nome}</b><br>📍 ${d.rua || ''}<br>
                     <a href="${linkNav}" target="_blank" class="btn-navegar">🧭 NAVEGAR</a>
+                    <button class="btn-edit" onclick="prepararEdicao('${id}')">✏️ Editar</button>
+                    <button class="btn-del" onclick="excluirPonto('${id}')">🗑️ Excluir</button>
                 `);
                 marcadoresAtivos.push({ nome: d.nome.toLowerCase(), marker });
             });
         });
+    }
+
+    async function prepararEdicao(id) {
+        const doc = await db.collection("pontos").doc(id).get();
+        const d = doc.data();
+        document.getElementById('edit-id').value = id;
+        document.getElementById('edit-lat').value = d.lat;
+        document.getElementById('edit-lng').value = d.lng;
+        document.getElementById('nome-cliente').value = d.nome;
+        document.getElementById('whats-cliente').value = d.whatsapp || '';
+        document.getElementById('rua-cliente').value = d.rua || '';
+        document.getElementById('bairro-cliente').value = d.bairro || '';
+        document.getElementById('ref-cliente').value = d.referencia || '';
+        document.getElementById('form-title').innerText = "✏️ Editando Cliente";
+        document.getElementById('btn-acao').innerText = "CONFIRMAR ALTERAÇÕES";
+        document.getElementById('btn-checkin').style.display = "block"; // Mostra botão checkin
+        document.getElementById('btn-cancelar').style.display = "block";
+        window.scrollTo(0, document.body.scrollHeight);
+    }
+
+    function cancelarEdicao() { location.reload(); }
+
+    async function excluirPonto(id) {
+        if (confirm("Deseja mesmo excluir este cliente?")) {
+            await db.collection("pontos").doc(id).delete();
+            alert("Excluído!");
+        }
     }
 
     function filtrarMarcadores() {
