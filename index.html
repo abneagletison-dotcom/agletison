@@ -10,52 +10,65 @@
         body { font-family: sans-serif; margin: 0; background: #f4f4f4; overflow: hidden; }
         #map { height: 100vh; width: 100%; z-index: 1; }
         
-        /* Botão Minha Localização */
-        .btn-my-location { position: fixed; bottom: 20px; right: 20px; z-index: 5000; background: white; border: none; width: 50px; height: 50px; border-radius: 50%; box-shadow: 0 2px 10px rgba(0,0,0,0.3); color: #004a8d; font-size: 20px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
-
+        /* MENU LATERAL */
         .sidebar { position: fixed; top: 0; left: -280px; width: 280px; height: 100%; background: #012a4a; color: white; z-index: 10000; transition: 0.3s; display: flex; flex-direction: column; }
         .sidebar.active { left: 0; }
         .sidebar-header { padding: 20px; background: #013a63; text-align: center; border-bottom: 2px solid #ffc107; }
         .sidebar-footer { padding: 15px; background: #011627; border-top: 1px solid #ffc107; text-align: center; }
         .my-profile-img { width: 70px; height: 70px; border-radius: 50%; border: 2px solid #ffc107; object-fit: cover; }
 
+        /* BOTÕES */
+        .btn-menu { position: fixed; top: 15px; left: 15px; z-index: 5000; background: #012a4a; color: white; border: none; padding: 12px; border-radius: 8px; font-size: 20px; }
+        .btn-locate { position: fixed; bottom: 20px; right: 20px; z-index: 5000; background: white; color: #012a4a; border: none; width: 55px; height: 55px; border-radius: 50%; font-size: 24px; box-shadow: 0 4px 10px rgba(0,0,0,0.4); display: flex; align-items: center; justify-content: center; }
+
         .overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: white; z-index: 11000; overflow-y: auto; padding: 20px; box-sizing: border-box; }
-        .btn-menu { position: fixed; top: 15px; left: 15px; z-index: 5000; background: #012a4a; color: white; border: none; padding: 10px 15px; border-radius: 5px; font-size: 20px; }
+        input, button { width: 100%; padding: 14px; margin: 6px 0; border-radius: 10px; border: 1px solid #ccc; box-sizing: border-box; font-weight: bold; }
         
-        /* Estilos de Formulário */
+        .item-rota { display: flex; align-items: center; gap: 10px; padding: 10px; border-bottom: 1px solid #eee; color: #333; }
+        .item-rota input { width: 20px; height: 20px; }
+        
+        .btn-save { background: #25D366; color: white; border: none; }
+        .btn-route { background: #6f42c1; color: white; border: none; }
+        .btn-google { background: #4285F4; color: white; border: none; }
+        
         .foto-preview { width: 100%; height: 200px; object-fit: cover; border-radius: 10px; margin: 10px 0; display: none; border: 2px solid #012a4a; }
-        input, button { width: 100%; padding: 12px; margin: 5px 0; border-radius: 8px; border: 1px solid #ccc; box-sizing: border-box; font-weight: bold; }
-        .btn-checkin { background: #6f42c1; color: white; border: none; }
-        .btn-save { background: #25D366; color: white; border: none; font-size: 16px; }
-        .btn-photo { background: #013a63; color: white; border: none; }
     </style>
 </head>
 <body>
 
 <div id="sidebar" class="sidebar">
-    <div class="sidebar-header">
-        <h2 style="margin:0; color:#ffc107;">aGletison_app</h2>
-    </div>
-    <div class="sidebar-content" style="flex:1; padding:10px;">
-        <div onclick="irPara('mapa')" style="padding:15px; cursor:pointer;"><i class="fas fa-map"></i> Mapa Inicial</div>
-        <div onclick="irPara('cadastro')" style="padding:15px; cursor:pointer;"><i class="fas fa-plus-circle"></i> Adicionar Localização</div>
+    <div class="sidebar-header"><h2 style="color:#ffc107; margin:0;">aGletison_app</h2></div>
+    <div style="flex:1; padding:10px;">
+        <div onclick="irPara('mapa')" style="padding:15px; cursor:pointer;"><i class="fas fa-home"></i> Início</div>
+        <div onclick="irPara('cadastro')" style="padding:15px; cursor:pointer;"><i class="fas fa-plus-circle"></i> Novo Cliente</div>
+        <div onclick="abrirRoteirizacao()" style="padding:15px; cursor:pointer;"><i class="fas fa-route"></i> Criar Roteiro</div>
     </div>
     <div class="sidebar-footer">
         <img src="https://unavatar.io/instagram/Agletison" class="my-profile-img">
         <p style="margin:5px 0; font-weight:bold; color:#ffc107;">@Agletison</p>
-        <a href="https://wa.me/5584987099439" style="color:white; text-decoration:none; font-size:12px;"><i class="fab fa-whatsapp"></i> Contato Dev</a>
-        <button onclick="toggleMenu()" style="background:#cc0000; margin-top:10px; padding:5px;">Sair Menu</button>
+        <button onclick="toggleMenu()" style="background:#cc0000; color:white; border:none; padding:5px;">Fechar</button>
     </div>
 </div>
 
 <button class="btn-menu" onclick="toggleMenu()"><i class="fas fa-bars"></i></button>
-<button class="btn-my-location" onclick="centralizarEmMim()"><i class="fas fa-crosshairs"></i></button>
+<button class="btn-locate" onclick="centralizarEmMim()"><i class="fas fa-crosshairs"></i></button>
 
 <div id="map"></div>
 
+<div id="janela-rota" class="overlay">
+    <button onclick="fecharOverlays()" style="background:#666; color:white;">⬅ VOLTAR</button>
+    <h3>🚚 Selecione os Clientes da Rota</h3>
+    <div id="lista-clientes-rota"></div>
+    <div style="margin-top:20px;">
+        <button class="btn-route" onclick="gerarRotaApp()"><i class="fas fa-map"></i> TRAÇAR ROTA NO APP</button>
+        <button class="btn-google" onclick="gerarRotaGoogle()"><i class="fab fa-google"></i> ABRIR NO GOOGLE MAPS</button>
+        <button onclick="limparRota()" style="background:#eee; color:#333;">LIMPAR ROTA</button>
+    </div>
+</div>
+
 <div id="janela-cadastro" class="overlay">
     <button onclick="fecharOverlays()" style="background:#666; color:white;">⬅ VOLTAR</button>
-    <h3 id="form-title">📍 Registrar Cliente</h3>
+    <h3 id="form-title">📍 Registrar Localização</h3>
     <input type="hidden" id="edit-id">
     <input type="hidden" id="edit-lat"><input type="hidden" id="edit-lng">
     
@@ -65,16 +78,16 @@
     <input type="text" id="bairro-cliente" placeholder="Bairro">
     <input type="text" id="ref-cliente" placeholder="Referência">
 
-    <input type="file" id="input-foto" accept="image/*" capture="environment" style="display:none;" onchange="previewFoto()">
-    <button class="btn-photo" onclick="document.getElementById('input-foto').click()"><i class="fas fa-camera"></i> FOTO DA CASA</button>
+    <p style="margin:10px 0 5px; font-weight:bold;">Foto da Casa:</p>
+    <input type="file" id="input-foto" accept="image/*" capture="environment" onchange="previewFoto()">
     <img id="prev-foto" class="foto-preview">
 
-    <button class="btn-checkin" onclick="fazerCheckin()"><i class="fas fa-map-marker-alt"></i> ATUALIZAR LOCALIZAÇÃO (CHECK-IN)</button>
-    <button class="btn-save" id="btn-salvar" onclick="salvarLocalizacao()">SALVAR REGISTRO</button>
+    <button style="background:#6f42c1; color:white;" onclick="fazerCheckin()"><i class="fas fa-map-marker-alt"></i> ATUALIZAR LOCALIZAÇÃO</button>
+    <button class="btn-save" onclick="salvarLocalizacao()">SALVAR REGISTRO</button>
 </div>
 
 <div id="janela-detalhes" class="overlay">
-    <button onclick="fecharOverlays()" style="background:#666; color:white;">⬅ VOLTAR AO MAPA</button>
+    <button onclick="fecharOverlays()" style="background:#666; color:white;">⬅ VOLTAR</button>
     <div id="conteudo-detalhes"></div>
 </div>
 
@@ -101,7 +114,7 @@
 
     let dadosLocais = [];
     let marcadores = [];
-    let minhaPosicao = null;
+    let linhaRota = null;
 
     function toggleMenu() { document.getElementById('sidebar').classList.toggle('active'); }
     function fecharOverlays() { document.querySelectorAll('.overlay').forEach(el => el.style.display = 'none'); }
@@ -109,19 +122,17 @@
     function irPara(destino) {
         fecharOverlays(); toggleMenu();
         if(destino === 'cadastro') {
-            limparForm();
-            document.getElementById('form-title').innerText = "📍 Registrar Cliente";
+            document.getElementById('edit-id').value = '';
+            document.getElementById('nome-cliente').value = '';
+            document.getElementById('prev-foto').style.display = 'none';
             document.getElementById('janela-cadastro').style.display = 'block';
-            fazerCheckin(); // Pega localização automática ao abrir
+            fazerCheckin();
         }
     }
 
     function centralizarEmMim() {
         navigator.geolocation.getCurrentPosition(pos => {
-            const lat = pos.coords.latitude, lng = pos.coords.longitude;
-            map.setView([lat, lng], 17);
-            if(minhaPosicao) map.removeLayer(minhaPosicao);
-            minhaPosicao = L.circleMarker([lat, lng], { color: 'blue', radius: 10 }).addTo(map);
+            map.flyTo([pos.coords.latitude, pos.coords.longitude], 17);
         });
     }
 
@@ -141,7 +152,7 @@
         navigator.geolocation.getCurrentPosition(pos => {
             document.getElementById('edit-lat').value = pos.coords.latitude;
             document.getElementById('edit-lng').value = pos.coords.longitude;
-            alert("📍 Localização capturada via Check-in!");
+            alert("📍 GPS OK!");
         });
     }
 
@@ -164,18 +175,15 @@
             dados.foto = await ref.getDownloadURL();
         }
 
-        if(id) {
-            await db.collection("pontos").doc(id).update(dados);
-        } else {
-            await db.collection("pontos").add(dados);
-        }
-        alert("Sucesso!");
+        id ? await db.collection("pontos").doc(id).update(dados) : await db.collection("pontos").add(dados);
+        alert("Salvo!");
         fecharOverlays();
     }
 
     function carregarDados() {
         db.collection("pontos").onSnapshot(snap => {
             marcadores.forEach(m => map.removeLayer(m));
+            dadosLocais = [];
             snap.forEach(doc => {
                 const d = doc.data(); d.id = doc.id;
                 dadosLocais.push(d);
@@ -187,13 +195,12 @@
 
     function abrirDetalhes(id) {
         const d = dadosLocais.find(item => item.id === id);
-        const linkNav = `https://www.google.com/maps/dir/?api=1&destination=${d.lat},${d.lng}`;
         document.getElementById('conteudo-detalhes').innerHTML = `
             ${d.foto ? `<img src="${d.foto}" style="width:100%; border-radius:10px;">` : ''}
             <h2>${d.nome}</h2>
-            <p>Rua: ${d.rua} - Bairro: ${d.bairro}</p>
-            <button onclick="window.open('${linkNav}')" style="background:#007bff; color:white;">🧭 NAVEGAR (GPS)</button>
-            <button onclick="prepararEdicao('${d.id}')" style="background:#ffc107; color:black;">✏️ EDITAR / ATUALIZAR FOTO</button>
+            <p>${d.rua}, ${d.bairro}</p>
+            <a href="https://wa.me/55${d.whatsapp}?text=Olá, sou entregador da Shopee." target="_blank" style="background:#25D366; color:white; padding:15px; display:block; text-align:center; border-radius:10px; text-decoration:none; font-weight:bold;">ZAP DO CLIENTE</a>
+            <button onclick="prepararEdicao('${d.id}')" style="background:#ffc107; margin-top:10px;">EDITAR DADOS</button>
         `;
         document.getElementById('janela-detalhes').style.display = 'block';
     }
@@ -205,27 +212,55 @@
         document.getElementById('whats-cliente').value = d.whatsapp;
         document.getElementById('rua-cliente').value = d.rua;
         document.getElementById('bairro-cliente').value = d.bairro;
-        document.getElementById('ref-cliente').value = d.referencia || '';
         document.getElementById('edit-lat').value = d.lat;
         document.getElementById('edit-lng').value = d.lng;
-        if(d.foto) {
-            document.getElementById('prev-foto').src = d.foto;
-            document.getElementById('prev-foto').style.display = 'block';
-        }
-        document.getElementById('form-title').innerText = "✏️ Editando Local";
+        if(d.foto) { document.getElementById('prev-foto').src = d.foto; document.getElementById('prev-foto').style.display = 'block'; }
         fecharOverlays();
         document.getElementById('janela-cadastro').style.display = 'block';
     }
 
-    function limparForm() {
-        document.getElementById('edit-id').value = '';
-        document.getElementById('nome-cliente').value = '';
-        document.getElementById('prev-foto').style.display = 'none';
-        document.getElementById('input-foto').value = '';
+    /* SISTEMA DE ROTEIRIZAÇÃO RESTAURADO */
+    function abrirRoteirizacao() {
+        toggleMenu();
+        const lista = document.getElementById('lista-clientes-rota');
+        lista.innerHTML = dadosLocais.map(d => `
+            <div class="item-rota">
+                <input type="checkbox" class="chk-rota" data-lat="${d.lat}" data-lng="${d.lng}" value="${d.id}">
+                <span><strong>${d.nome}</strong><br><small>${d.bairro}</small></span>
+            </div>
+        `).join('');
+        document.getElementById('janela-rota').style.display = 'block';
+    }
+
+    function gerarRotaGoogle() {
+        const selecionados = Array.from(document.querySelectorAll('.chk-rota:checked'));
+        if(selecionados.length === 0) return alert("Selecione clientes!");
+        
+        // Formata a URL para o Google Maps com múltiplos pontos
+        const pontos = selecionados.map(s => s.getAttribute('data-lat') + ',' + s.getAttribute('data-lng')).join('/');
+        window.open(`https://www.google.com/maps/dir/${pontos}`, '_blank');
+    }
+
+    function gerarRotaApp() {
+        const selecionados = Array.from(document.querySelectorAll('.chk-rota:checked'));
+        if(selecionados.length === 0) return alert("Selecione clientes!");
+        
+        if(linhaRota) map.removeLayer(linhaRota);
+        
+        const coordenadas = selecionados.map(s => [parseFloat(s.getAttribute('data-lat')), parseFloat(s.getAttribute('data-lng'))]);
+        
+        linhaRota = L.polyline(coordenadas, {color: '#6f42c1', weight: 5, opacity: 0.7, dashArray: '10, 10'}).addTo(map);
+        map.fitBounds(linhaRota.getBounds());
+        fecharOverlays();
+        alert("🏁 Rota traçada no mapa!");
+    }
+
+    function limparRota() {
+        if(linhaRota) map.removeLayer(linhaRota);
+        alert("Rota limpa.");
     }
 
     carregarDados();
-    centralizarEmMim();
 </script>
 </body>
 </html>
