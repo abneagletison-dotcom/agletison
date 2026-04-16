@@ -3,85 +3,80 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>aGletison_app - Logística</title>
+    <title>aGletison_app</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
     <style>
         body { font-family: sans-serif; margin: 0; background: #f4f4f4; overflow: hidden; }
         #map { height: 100vh; width: 100%; z-index: 1; }
-        .sidebar { position: fixed; top: 0; left: -280px; width: 280px; height: 100%; background: #004a8d; color: white; z-index: 10000; transition: 0.3s; display: flex; flex-direction: column; }
+        
+        /* MENU LATERAL CUSTOMIZADO */
+        .sidebar { position: fixed; top: 0; left: -280px; width: 280px; height: 100%; background: #012a4a; color: white; z-index: 10000; transition: 0.3s; display: flex; flex-direction: column; }
         .sidebar.active { left: 0; }
-        .sidebar-content { flex: 1; padding: 20px; }
-        .menu-item { padding: 15px; border-bottom: 1px solid #ffffff33; cursor: pointer; display: flex; align-items: center; gap: 10px; }
-        .sidebar-footer { padding: 20px; background: #003366; border-top: 1px solid #ffffff33; }
-        .profile-img { width: 60px; height: 60px; border-radius: 50%; border: 2px solid white; margin-bottom: 10px; }
-        .btn-menu { position: fixed; top: 15px; left: 15px; z-index: 5000; background: #004a8d; color: white; border: none; padding: 10px 15px; border-radius: 5px; font-size: 20px; }
-        .search-box { position: fixed; top: 15px; right: 15px; z-index: 5000; width: 200px; background: white; border-radius: 20px; padding: 5px 15px; display: flex; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
-        .search-box input { border: none; outline: none; width: 100%; padding: 5px; }
+        .sidebar-header { padding: 20px; background: #013a63; text-align: center; border-bottom: 2px solid #ffc107; }
+        .sidebar-content { flex: 1; padding: 10px; }
+        .menu-item { padding: 15px; border-bottom: 1px solid #ffffff1a; cursor: pointer; display: flex; align-items: center; gap: 10px; }
+        
+        /* RODAPÉ DO MENU - SUAS INFO */
+        .sidebar-footer { padding: 15px; background: #011627; border-top: 1px solid #ffc107; text-align: center; }
+        .my-profile-img { width: 70px; height: 70px; border-radius: 50%; border: 2px solid #ffc107; margin-bottom: 10px; object-fit: cover; }
+        .footer-link { color: white; text-decoration: none; display: block; margin: 5px 0; font-size: 14px; }
+
+        .btn-menu { position: fixed; top: 15px; left: 15px; z-index: 5000; background: #012a4a; color: white; border: none; padding: 10px 15px; border-radius: 5px; font-size: 20px; }
         .overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: white; z-index: 11000; overflow-y: auto; padding: 20px; box-sizing: border-box; }
-        .popup-content { text-align: center; min-width: 150px; }
-        .popup-foto { width: 100%; height: 80px; object-fit: cover; border-radius: 5px; }
-        .btn-ver-mais { background: #004a8d; color: white; border: none; padding: 8px; border-radius: 5px; width: 100%; margin-top: 5px; cursor: pointer; }
-        .btn-whats { background: #25D366; color: white; text-decoration: none; display: block; padding: 15px; border-radius: 8px; font-weight: bold; margin: 10px 0; text-align: center; }
-        input, button { width: 100%; padding: 12px; margin: 5px 0; border-radius: 8px; border: 1px solid #ccc; box-sizing: border-box; }
-        button { background: #004a8d; color: white; border: none; font-weight: bold; cursor: pointer; }
+        
+        /* BOTÕES */
+        button, .btn-action { width: 100%; padding: 12px; margin: 5px 0; border-radius: 8px; border: none; font-weight: bold; cursor: pointer; text-align: center; display: block; text-decoration: none; box-sizing: border-box; }
+        .btn-save { background: #25D366; color: white; }
+        .btn-edit { background: #ffc107; color: black; }
+        .btn-whats-client { background: #128C7E; color: white; }
+        .btn-back { background: #666; color: white; }
+
+        input { width: 100%; padding: 12px; margin: 5px 0; border-radius: 8px; border: 1px solid #ccc; box-sizing: border-box; }
     </style>
 </head>
 <body>
 
 <div id="sidebar" class="sidebar">
-    <div class="sidebar-content">
-        <h2 style="color: #ffc107;">aGletison_app</h2>
-        <div class="menu-item" onclick="irPara('mapa')"><i class="fas fa-home"></i> Início</div>
-        <div class="menu-item" onclick="irPara('roteirizacao')"><i class="fas fa-route"></i> Roteirização</div>
-        <div class="menu-item" onclick="irPara('cadastro')"><i class="fas fa-user-plus"></i> Adicionar Localização</div>
+    <div class="sidebar-header">
+        <h2 style="margin:0; color:#ffc107;">aGletison_app</h2>
     </div>
     
+    <div class="sidebar-content">
+        <div class="menu-item" onclick="irPara('mapa')"><i class="fas fa-map-marked-alt"></i> Início</div>
+        <div class="menu-item" onclick="irPara('roteirizacao')"><i class="fas fa-route"></i> Roteirização</div>
+        <div class="menu-item" onclick="irPara('cadastro')"><i class="fas fa-plus-circle"></i> Novo Cadastro</div>
+    </div>
+
     <div class="sidebar-footer">
-        <img src="https://unavatar.io/instagram/Agletison" class="profile-img" alt="Agletison">
-        <p style="margin: 0; font-weight: bold;">Informações do App</p>
-        <div style="font-size: 14px; margin-top: 10px;">
-            <a href="https://instagram.com/Agletison" target="_blank" style="color: white; text-decoration: none; display: block; margin-bottom: 5px;">
-                <i class="fab fa-instagram"></i> @Agletison
-            </a>
-            <a href="https://wa.me/5584987099439" target="_blank" style="color: white; text-decoration: none; display: block;">
-                <i class="fab fa-whatsapp"></i> (84) 98709-9439
-            </a>
-        </div>
-        <button onclick="toggleMenu()" style="margin-top: 15px; background: #ffc107; color: #000; padding: 5px;">FECHAR</button>
+        <img src="https://unavatar.io/instagram/Agletison" class="my-profile-img" onerror="this.src='https://via.placeholder.com/70'">
+        <p style="margin:0; font-size:14px;">Desenvolvido por:</p>
+        <p style="margin:0 0 10px 0; font-weight:bold; color:#ffc107;">Agletison</p>
+        <a href="https://instagram.com/Agletison" target="_blank" class="footer-link"><i class="fab fa-instagram"></i> @Agletison</a>
+        <a href="https://wa.me/5584987099439" target="_blank" class="footer-link"><i class="fab fa-whatsapp"></i> (84) 98709-9439</a>
+        <button onclick="toggleMenu()" style="background:#cc0000; padding:5px; margin-top:10px;">FECHAR</button>
     </div>
 </div>
 
 <button class="btn-menu" onclick="toggleMenu()"><i class="fas fa-bars"></i></button>
 
-<div class="search-box">
-    <input type="text" id="input-busca" placeholder="Buscar..." oninput="filtrarMarcadores()">
-</div>
-
 <div id="map"></div>
 
 <div id="janela-cadastro" class="overlay">
-    <button onclick="fecharOverlays()" style="background:#666">⬅ VOLTAR</button>
-    <h3 id="form-title">📍 Registrar Cliente</h3>
+    <button class="btn-back" onclick="fecharOverlays()">⬅ VOLTAR</button>
+    <h3 id="form-title" style="color:#012a4a">📍 Registrar Cliente</h3>
     <input type="hidden" id="edit-id">
     <input type="text" id="nome-cliente" placeholder="Nome do Cliente">
-    <input type="tel" id="whats-cliente" placeholder="WhatsApp (Ex: 84988887777)">
+    <input type="tel" id="whats-cliente" placeholder="WhatsApp (Somente números)">
     <input type="text" id="rua-cliente" placeholder="Rua">
     <input type="text" id="bairro-cliente" placeholder="Bairro">
-    <input type="text" id="ref-cliente" placeholder="Referência">
-    <button onclick="salvarLocalizacao()" id="btn-salvar" style="background:#25D366; margin-top:10px">SALVAR REGISTRO</button>
+    <input type="text" id="ref-cliente" placeholder="Referência (Opcional)">
+    <button id="btn-salvar-final" class="btn-save" onclick="salvarLocalizacao()">SALVAR REGISTRO</button>
 </div>
 
 <div id="janela-detalhes" class="overlay">
-    <button onclick="fecharOverlays()" style="background:#666">⬅ VOLTAR AO MAPA</button>
+    <button class="btn-back" onclick="fecharOverlays()">⬅ VOLTAR AO MAPA</button>
     <div id="conteudo-detalhes"></div>
-</div>
-
-<div id="janela-rota" class="overlay">
-    <button onclick="fecharOverlays()" style="background:#666">⬅ VOLTAR</button>
-    <h3>🚚 Selecione os pontos da rota</h3>
-    <div id="lista-roteirizacao"></div>
-    <button onclick="processarRoteirizacao()" style="background:#6f42c1; margin-top:15px">INICIAR ROTA NO GOOGLE MAPS</button>
 </div>
 
 <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
@@ -89,6 +84,7 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
 <script>
+    // FIREBASE (Configuração mantida)
     const firebaseConfig = {
       apiKey: "AIzaSyBuVx3VYGHF97hU9-CSLa-FmSbxFYIH20A",
       authDomain: "mapanisia.firebaseapp.com",
@@ -103,64 +99,52 @@
     const map = L.map('map', { zoomControl: false }).setView([-6.0886, -35.2111], 14);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
-    let marcadoresAtivos = [];
     let dadosLocais = [];
+    let marcadores = [];
 
     function toggleMenu() { document.getElementById('sidebar').classList.toggle('active'); }
     function fecharOverlays() { document.querySelectorAll('.overlay').forEach(el => el.style.display = 'none'); }
 
     function irPara(destino) {
-        toggleMenu();
         fecharOverlays();
+        toggleMenu();
         if(destino === 'cadastro') {
             document.getElementById('edit-id').value = '';
             document.getElementById('form-title').innerText = "📍 Registrar Cliente";
             document.getElementById('janela-cadastro').style.display = 'block';
-        } else if(destino === 'roteirizacao') {
-            montarListaRoteirizacao();
-            document.getElementById('janela-rota').style.display = 'block';
         }
     }
 
     function carregarDados() {
         db.collection("pontos").onSnapshot(snap => {
-            marcadoresAtivos.forEach(m => map.removeLayer(m));
-            marcadoresAtivos = []; dadosLocais = [];
+            marcadores.forEach(m => map.removeLayer(m));
+            marcadores = []; dadosLocais = [];
             snap.forEach(doc => {
                 const d = doc.data(); d.id = doc.id;
                 dadosLocais.push(d);
-                const marker = L.marker([d.lat, d.lng]).addTo(map);
-                const popupHtml = `
-                    <div class="popup-content">
-                        <strong>${d.nome}</strong><br><small>${d.bairro}</small><br>
-                        <button class="btn-ver-mais" onclick="abrirDetalhes('${d.id}')">VER DETALHES</button>
-                    </div>`;
-                marker.bindPopup(popupHtml);
-                marker.nomeBusca = (d.nome + d.rua + d.bairro).toLowerCase();
-                marcadoresAtivos.push(marker);
+                const marker = L.marker([d.lat, d.lng]).addTo(map).on('click', () => abrirDetalhes(d.id));
+                marcadores.push(marker);
             });
         });
     }
 
     function abrirDetalhes(id) {
-        fecharOverlays();
         const d = dadosLocais.find(item => item.id === id);
-        const msgWhats = encodeURIComponent("Olá, sou entregador da Shopee.");
-        const linkWhats = `https://wa.me/55${d.whatsapp}?text=${msgWhats}`;
-        const linkNav = `https://www.google.com/maps/dir/?api=1&destination=${d.lat},${d.lng}`;
+        // WHATSAPP DO CLIENTE COM MENSAGEM
+        const msg = encodeURIComponent("Olá, sou entregador da Shopee.");
+        const linkWhats = `https://wa.me/55${d.whatsapp}?text=${msg}`;
 
         document.getElementById('conteudo-detalhes').innerHTML = `
-            ${d.foto ? `<img src="${d.foto}" style="width:100%; border-radius:10px">` : ''}
             <h2>${d.nome}</h2>
-            <p><strong>📍 Endereço:</strong> ${d.rua}, ${d.bairro}</p>
-            <p><strong>🏠 Referência:</strong> ${d.referencia || 'Nenhuma'}</p>
-            <a href="${linkWhats}" target="_blank" class="btn-whats">💬 CHAMAR NO WHATSAPP</a>
-            <a href="${linkNav}" target="_blank" style="background:#007bff; color:white; text-decoration:none; display:block; padding:15px; border-radius:8px; font-weight:bold; text-align:center;">🧭 INICIAR GPS</a>
-            <button onclick="prepararEdicao('${d.id}')" style="background:#ffc107; color:black; margin-top:20px;">✏️ EDITAR INFORMAÇÕES</button>
+            <p><strong>📍 Rua:</strong> ${d.rua}</p>
+            <p><strong>🏘️ Bairro:</strong> ${d.bairro}</p>
+            <a href="${linkWhats}" target="_blank" class="btn-action btn-whats-client"><i class="fab fa-whatsapp"></i> WHATSAPP DO CLIENTE</a>
+            <button class="btn-edit" onclick="prepararEdicao('${d.id}')">✏️ EDITAR LOCALIZAÇÃO</button>
         `;
         document.getElementById('janela-detalhes').style.display = 'block';
     }
 
+    // --- CORREÇÃO DO BOTÃO EDITAR ---
     function prepararEdicao(id) {
         const d = dadosLocais.find(item => item.id === id);
         document.getElementById('edit-id').value = id;
@@ -169,7 +153,8 @@
         document.getElementById('rua-cliente').value = d.rua;
         document.getElementById('bairro-cliente').value = d.bairro;
         document.getElementById('ref-cliente').value = d.referencia || '';
-        document.getElementById('form-title').innerText = "✏️ Editando Cliente";
+        
+        document.getElementById('form-title').innerText = "✏️ Editando: " + d.nome;
         fecharOverlays();
         document.getElementById('janela-cadastro').style.display = 'block';
     }
@@ -181,13 +166,12 @@
             whatsapp: document.getElementById('whats-cliente').value.replace(/\D/g,''),
             rua: document.getElementById('rua-cliente').value,
             bairro: document.getElementById('bairro-cliente').value,
-            referencia: document.getElementById('ref-cliente').value,
-            data_modificacao: new Date()
+            referencia: document.getElementById('ref-cliente').value
         };
 
         if(id) {
             await db.collection("pontos").doc(id).update(dados);
-            alert("Atualizado com sucesso!");
+            alert("Dados atualizados!");
         } else {
             navigator.geolocation.getCurrentPosition(async pos => {
                 dados.lat = pos.coords.latitude; dados.lng = pos.coords.longitude;
@@ -196,25 +180,7 @@
             });
         }
         fecharOverlays();
-    }
-
-    function filtrarMarcadores() {
-        const b = document.getElementById('input-busca').value.toLowerCase();
-        marcadoresAtivos.forEach(m => b === "" || m.nomeBusca.includes(b) ? m.addTo(map) : map.removeLayer(m));
-    }
-
-    function montarListaRoteirizacao() {
-        document.getElementById('lista-roteirizacao').innerHTML = dadosLocais.map(d => `
-            <div style="padding:10px; border-bottom:1px solid #ddd;">
-                <input type="checkbox" class="route-check" value="${d.id}"> ${d.nome} - ${d.bairro}
-            </div>`).join('');
-    }
-
-    function processarRoteirizacao() {
-        const ids = Array.from(document.querySelectorAll('.route-check:checked')).map(c => c.value);
-        if(ids.length === 0) return alert("Selecione pontos!");
-        const selecionados = dadosLocais.filter(d => ids.includes(d.id));
-        const win = window.open(`https://www.google.com/maps/dir/My+Location/${selecionados.map(s => s.lat+','+s.lng).join('/')}`, '_blank');
+        document.getElementById('nome-cliente').value = ''; // Limpa após salvar
     }
 
     carregarDados();
