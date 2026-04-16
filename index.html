@@ -2,166 +2,87 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>aGletison_app | Pro Delivery</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>aGletison_app</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
     <style>
-        :root {
-            --primary: #012a4a;
-            --secondary: #01497c;
-            --accent: #ffc107;
-            --success: #25D366;
-            --danger: #ef476f;
-            --dark: #011627;
-            --light: #f8f9fa;
-        }
-
-        body { font-family: 'Segoe UI', Roboto, sans-serif; margin: 0; background: var(--dark); color: white; overflow: hidden; }
-        #map { height: 100vh; width: 100%; z-index: 1; filter: grayscale(0.2); }
-
-        /* HEADER & BUSCA */
-        .top-bar { position: fixed; top: 10px; left: 10px; right: 10px; z-index: 5000; display: flex; gap: 10px; }
-        .search-container { flex: 1; background: white; border-radius: 12px; display: flex; align-items: center; padding: 0 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
-        .search-container input { border: none; outline: none; padding: 12px; width: 100%; font-size: 16px; color: var(--dark); }
-        .btn-round { background: var(--primary); color: white; border: none; width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
-
-        /* MENU LATERAL PRO */
-        .sidebar { position: fixed; top: 0; left: -300px; width: 300px; height: 100%; background: var(--primary); z-index: 10000; transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1); display: flex; flex-direction: column; box-shadow: 5px 0 25px rgba(0,0,0,0.5); }
-        .sidebar.active { left: 0; }
-        .sidebar-header { padding: 30px 20px; background: var(--secondary); text-align: center; border-bottom: 3px solid var(--accent); }
-        .nav-menu { flex: 1; padding: 20px 0; }
-        .nav-item { padding: 15px 25px; display: flex; align-items: center; gap: 15px; transition: 0.2s; cursor: pointer; border-left: 4px solid transparent; }
-        .nav-item:hover { background: rgba(255,255,255,0.1); border-left-color: var(--accent); }
-
-        /* RODAPÉ DO MENU */
-        .sidebar-footer { padding: 20px; background: var(--dark); text-align: center; }
-        .profile-card { background: rgba(255,255,255,0.05); padding: 15px; border-radius: 15px; margin-bottom: 10px; }
-        .my-img { width: 65px; height: 65px; border-radius: 50%; border: 2px solid var(--accent); margin-bottom: 8px; }
-
-        /* OVERLAYS ESTILIZADOS */
-        .overlay { display: none; position: fixed; inset: 0; background: var(--light); z-index: 11000; overflow-y: auto; color: var(--dark); }
-        .overlay-header { background: var(--primary); color: white; padding: 20px; display: flex; align-items: center; gap: 15px; position: sticky; top: 0; z-index: 2; }
-        .content { padding: 20px; }
-
-        /* FORMULÁRIOS */
-        .input-group { margin-bottom: 15px; }
-        .input-group label { display: block; margin-bottom: 5px; font-weight: bold; color: var(--secondary); font-size: 14px; }
-        input, select, textarea { width: 100%; padding: 14px; border-radius: 10px; border: 2px solid #ddd; font-size: 16px; box-sizing: border-box; }
-        input:focus { border-color: var(--secondary); outline: none; }
-
-        /* BOTÕES PRO */
-        .btn { border: none; border-radius: 12px; padding: 16px; font-weight: bold; font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; transition: 0.3s; width: 100%; margin-top: 10px; }
-        .btn-main { background: var(--primary); color: white; }
-        .btn-save { background: var(--success); color: white; }
-        .btn-camera { background: var(--secondary); color: white; }
-        .btn-locate-me { position: fixed; bottom: 30px; right: 20px; z-index: 5000; background: white; color: var(--primary); width: 60px; height: 60px; border-radius: 50%; font-size: 24px; box-shadow: 0 6px 20px rgba(0,0,0,0.3); border: none; }
-
-        .preview-img { width: 100%; height: 250px; object-fit: cover; border-radius: 15px; margin: 15px 0; border: 4px solid white; box-shadow: 0 4px 12px rgba(0,0,0,0.1); display: none; }
+        body { font-family: sans-serif; margin: 0; background: #f4f4f4; overflow: hidden; }
+        #map { height: 100vh; width: 100%; z-index: 1; }
         
-        /* STATUS BADGE */
-        .badge { padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: bold; text-transform: uppercase; }
-        .status-pendente { background: #fff3cd; color: #856404; }
-        .status-entregue { background: #d4edda; color: #155724; }
+        /* MENU LATERAL */
+        .sidebar { position: fixed; top: 0; left: -280px; width: 280px; height: 100%; background: #012a4a; color: white; z-index: 10000; transition: 0.3s; display: flex; flex-direction: column; }
+        .sidebar.active { left: 0; }
+        .sidebar-header { padding: 20px; background: #013a63; text-align: center; border-bottom: 2px solid #ffc107; }
+        .sidebar-footer { padding: 15px; background: #011627; border-top: 1px solid #ffc107; text-align: center; }
+        .my-profile-img { width: 70px; height: 70px; border-radius: 50%; border: 2px solid #ffc107; object-fit: cover; margin-bottom: 5px; }
+
+        /* BOTÕES FLUTUANTES */
+        .btn-menu { position: fixed; top: 15px; left: 15px; z-index: 5000; background: #012a4a; color: white; border: none; padding: 12px; border-radius: 8px; font-size: 20px; }
+        .btn-locate { position: fixed; bottom: 20px; right: 20px; z-index: 5000; background: white; color: #012a4a; border: none; width: 55px; height: 55px; border-radius: 50%; font-size: 24px; box-shadow: 0 4px 10px rgba(0,0,0,0.4); display: flex; align-items: center; justify-content: center; }
+
+        /* JANELAS */
+        .overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: white; z-index: 11000; overflow-y: auto; padding: 20px; box-sizing: border-box; }
+        
+        input, button { width: 100%; padding: 14px; margin: 6px 0; border-radius: 10px; border: 1px solid #ccc; box-sizing: border-box; font-size: 16px; font-weight: bold; }
+        
+        /* CORES DOS BOTÕES */
+        .btn-photo { background: #013a63; color: white; border: 2px solid #ffc107; height: 60px; }
+        .btn-checkin { background: #6f42c1; color: white; }
+        .btn-save { background: #25D366; color: white; border: none; margin-top: 20px; }
+        .btn-whats-client { background: #128C7E; color: white; text-decoration: none; display: block; text-align: center; padding: 15px; border-radius: 10px; }
+        
+        .foto-preview { width: 100%; height: 220px; object-fit: cover; border-radius: 12px; margin: 10px 0; display: none; border: 3px solid #013a63; }
+        #loading { display: none; color: #012a4a; font-weight: bold; text-align: center; }
     </style>
 </head>
 <body>
 
-<div class="top-bar">
-    <button class="btn-round" onclick="toggleMenu()"><i class="fas fa-bars"></i></button>
-    <div class="search-container">
-        <i class="fas fa-search" style="color: #999;"></i>
-        <input type="text" id="search-input" placeholder="Buscar cliente ou bairro..." oninput="filtrarMarcadores()">
-    </div>
-</div>
-
 <div id="sidebar" class="sidebar">
-    <div class="sidebar-header">
-        <h2 style="margin:0; color:var(--accent); letter-spacing: 1px;">aGletison_app</h2>
-        <span style="font-size: 12px; opacity: 0.8;">LOGÍSTICA V3.0 PRO</span>
+    <div class="sidebar-header"><h2 style="margin:0; color:#ffc107;">aGletison_app</h2></div>
+    <div style="flex:1; padding:10px;">
+        <div onclick="irPara('mapa')" style="padding:15px; cursor:pointer;"><i class="fas fa-home"></i> Início</div>
+        <div onclick="irPara('cadastro')" style="padding:15px; cursor:pointer;"><i class="fas fa-plus-circle"></i> Adicionar Localização</div>
     </div>
-    
-    <div class="nav-menu">
-        <div class="nav-item" onclick="irPara('mapa')"><i class="fas fa-layer-group"></i> Painel Geral</div>
-        <div class="nav-item" onclick="irPara('cadastro')"><i class="fas fa-map-pin"></i> Novo Registro</div>
-        <div class="nav-item" onclick="alert('Relatórios em breve!')"><i class="fas fa-chart-line"></i> Desempenho</div>
-    </div>
-
     <div class="sidebar-footer">
-        <div class="profile-card">
-            <img src="https://unavatar.io/instagram/Agletison" class="my-img" onerror="this.src='https://via.placeholder.com/65'">
-            <div style="font-weight: bold; color: var(--accent);">Agletison</div>
-            <div style="font-size: 11px; opacity: 0.7; margin-bottom: 10px;">Administrador</div>
-            <div style="display: flex; justify-content: center; gap: 15px; font-size: 18px;">
-                <a href="https://instagram.com/Agletison" target="_blank" style="color:white;"><i class="fab fa-instagram"></i></a>
-                <a href="https://wa.me/5584987099439" target="_blank" style="color:white;"><i class="fab fa-whatsapp"></i></a>
-            </div>
-        </div>
-        <button onclick="toggleMenu()" style="background:transparent; border:1px solid var(--danger); color:var(--danger); width:100%; padding:8px; border-radius:8px;">Fechar</button>
+        <img src="https://unavatar.io/instagram/Agletison" class="my-profile-img" onerror="this.src='https://via.placeholder.com/70'">
+        <p style="margin:0; font-weight:bold; color:#ffc107;">@Agletison</p>
+        <a href="https://instagram.com/Agletison" target="_blank" style="color:white; text-decoration:none; display:block; margin:5px 0;">Instagram</a>
+        <a href="https://wa.me/5584987099439" target="_blank" style="color:white; text-decoration:none; display:block;">WhatsApp</a>
+        <button onclick="toggleMenu()" style="background:#cc0000; color:white; border:none; margin-top:10px;">FECHAR</button>
     </div>
 </div>
 
-<button class="btn-locate-me" onclick="minhaLocalizacao()"><i class="fas fa-location-crosshairs"></i></button>
+<button class="btn-menu" onclick="toggleMenu()"><i class="fas fa-bars"></i></button>
+<button class="btn-locate" onclick="minhaLocalizacao()"><i class="fas fa-crosshairs"></i></button>
 
 <div id="map"></div>
 
 <div id="janela-cadastro" class="overlay">
-    <div class="overlay-header">
-        <i class="fas fa-arrow-left" onclick="fecharOverlays()"></i>
-        <h3 id="form-title" style="margin:0">Registrar Localização</h3>
-    </div>
-    <div class="content">
-        <input type="hidden" id="edit-id">
-        <input type="hidden" id="edit-lat"><input type="hidden" id="edit-lng">
-        
-        <div class="input-group">
-            <label>Nome Completo do Cliente</label>
-            <input type="text" id="nome-cliente" placeholder="Ex: João Silva">
-        </div>
-        <div class="input-group">
-            <label>WhatsApp</label>
-            <input type="tel" id="whats-cliente" placeholder="849XXXXXXXX">
-        </div>
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-            <div class="input-group">
-                <label>Rua/Nº</label>
-                <input type="text" id="rua-cliente">
-            </div>
-            <div class="input-group">
-                <label>Bairro</label>
-                <input type="text" id="bairro-cliente">
-            </div>
-        </div>
-        <div class="input-group">
-            <label>Status da Entrega</label>
-            <select id="status-entrega">
-                <option value="pendente">🟡 Pendente</option>
-                <option value="entregue">🟢 Entregue</option>
-                <option value="devolvido">🔴 Devolvido</option>
-            </select>
-        </div>
+    <button onclick="fecharOverlays()" style="background:#666; color:white;">⬅ VOLTAR</button>
+    <h3 id="form-title">📍 Registro</h3>
+    <input type="hidden" id="edit-id">
+    <input type="hidden" id="edit-lat">
+    <input type="hidden" id="edit-lng">
+    
+    <input type="text" id="nome-cliente" placeholder="Nome do Cliente">
+    <input type="tel" id="whats-cliente" placeholder="WhatsApp (Ex: 84987099439)">
+    <input type="text" id="rua-cliente" placeholder="Endereço">
+    <input type="text" id="bairro-cliente" placeholder="Bairro">
+    <input type="text" id="ref-cliente" placeholder="Referência">
 
-        <button class="btn btn-camera" onclick="document.getElementById('input-foto').click()">
-            <i class="fas fa-camera"></i> CAPTURAR FOTO DA CASA
-        </button>
-        <input type="file" id="input-foto" accept="image/*" capture="environment" style="display:none" onchange="previewFoto()">
-        <img id="prev-foto" class="preview-img">
+    <p style="margin: 10px 0 5px 0; font-weight: bold; color: #012a4a;">Foto do Local:</p>
+    <input type="file" id="input-foto" accept="image/*" capture="environment" style="margin-bottom: 10px;" onchange="previewFoto()">
+    <img id="prev-foto" class="foto-preview">
 
-        <button class="btn btn-main" onclick="fazerCheckin()">
-            <i class="fas fa-bullseye"></i> RECALIBRAR GPS (CHECK-IN)
-        </button>
-        
-        <button class="btn btn-save" onclick="salvarLocalizacao()">
-            <i class="fas fa-check-double"></i> FINALIZAR REGISTRO
-        </button>
-    </div>
+    <button class="btn-checkin" onclick="fazerCheckin()"><i class="fas fa-map-marker-alt"></i> ATUALIZAR LOCALIZAÇÃO (CHECK-IN)</button>
+    
+    <div id="loading">Enviando dados... aguarde...</div>
+    <button id="btn-salvar-btn" class="btn-save" onclick="salvarLocalizacao()">SALVAR TUDO</button>
 </div>
 
-<div id="janela-detalhes" class="overlay" style="background: #f0f2f5;">
-    <div class="overlay-header">
-        <i class="fas fa-arrow-left" onclick="fecharOverlays()"></i>
-        <h3 style="margin:0">Ficha do Cliente</h3>
-    </div>
+<div id="janela-detalhes" class="overlay">
+    <button onclick="fecharOverlays()" style="background:#666; color:white;">⬅ VOLTAR</button>
     <div id="conteudo-detalhes"></div>
 </div>
 
@@ -184,7 +105,7 @@
     const storage = firebase.storage();
 
     const map = L.map('map', { zoomControl: false }).setView([-6.0886, -35.2111], 14);
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png').addTo(map);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
     let dadosLocais = [];
     let marcadores = [];
@@ -192,9 +113,22 @@
     function toggleMenu() { document.getElementById('sidebar').classList.toggle('active'); }
     function fecharOverlays() { document.querySelectorAll('.overlay').forEach(el => el.style.display = 'none'); }
 
+    function irPara(destino) {
+        fecharOverlays(); toggleMenu();
+        if(destino === 'cadastro') {
+            document.getElementById('edit-id').value = '';
+            document.getElementById('nome-cliente').value = '';
+            document.getElementById('input-foto').value = '';
+            document.getElementById('prev-foto').style.display = 'none';
+            document.getElementById('form-title').innerText = "📍 Novo Registro";
+            document.getElementById('janela-cadastro').style.display = 'block';
+            fazerCheckin();
+        }
+    }
+
     function minhaLocalizacao() {
         navigator.geolocation.getCurrentPosition(pos => {
-            map.flyTo([pos.coords.latitude, pos.coords.longitude], 17);
+            map.setView([pos.coords.latitude, pos.coords.longitude], 17);
         });
     }
 
@@ -214,31 +148,43 @@
         navigator.geolocation.getCurrentPosition(pos => {
             document.getElementById('edit-lat').value = pos.coords.latitude;
             document.getElementById('edit-lng').value = pos.coords.longitude;
-            alert("📍 GPS Sincronizado!");
+            alert("Localização capturada!");
         });
     }
 
     async function salvarLocalizacao() {
         const id = document.getElementById('edit-id').value;
         const fotoFile = document.getElementById('input-foto').files[0];
+        const loading = document.getElementById('loading');
+        
         const dados = {
             nome: document.getElementById('nome-cliente').value,
             whatsapp: document.getElementById('whats-cliente').value.replace(/\D/g,''),
             rua: document.getElementById('rua-cliente').value,
             bairro: document.getElementById('bairro-cliente').value,
-            status: document.getElementById('status-entrega').value,
+            referencia: document.getElementById('ref-cliente').value,
             lat: parseFloat(document.getElementById('edit-lat').value),
-            lng: parseFloat(document.getElementById('edit-lng').value),
-            atualizado_em: new Date()
+            lng: parseFloat(document.getElementById('edit-lng').value)
         };
 
+        if(!dados.nome) return alert("Digite o nome!");
+
+        loading.style.display = 'block';
+
         if(fotoFile) {
-            const ref = storage.ref(`entregas/${Date.now()}`);
+            const ref = storage.ref(`fotos/${Date.now()}`);
             await ref.put(fotoFile);
             dados.foto = await ref.getDownloadURL();
         }
 
-        id ? await db.collection("pontos").doc(id).update(dados) : await db.collection("pontos").add(dados);
+        if(id) {
+            await db.collection("pontos").doc(id).update(dados);
+        } else {
+            await db.collection("pontos").add(dados);
+        }
+        
+        loading.style.display = 'none';
+        alert("Sucesso!");
         fecharOverlays();
     }
 
@@ -249,8 +195,7 @@
             snap.forEach(doc => {
                 const d = doc.data(); d.id = doc.id;
                 dadosLocais.push(d);
-                const color = d.status === 'entregue' ? '#25D366' : (d.status === 'devolvido' ? '#ef476f' : '#ffc107');
-                const marker = L.circleMarker([d.lat, d.lng], { color: color, radius: 8, fillOpacity: 0.9 }).addTo(map).on('click', () => abrirDetalhes(d.id));
+                const marker = L.marker([d.lat, d.lng]).addTo(map).on('click', () => abrirDetalhes(d.id));
                 marcadores.push(marker);
             });
         });
@@ -258,25 +203,15 @@
 
     function abrirDetalhes(id) {
         const d = dadosLocais.find(item => item.id === id);
-        const linkWhats = `https://wa.me/55${d.whatsapp}?text=Olá, sou entregador da Shopee.`;
+        const linkWhats = `https://wa.me/55${d.whatsapp}?text=${encodeURIComponent("Olá, sou entregador da Shopee.")}`;
         
         document.getElementById('conteudo-detalhes').innerHTML = `
-            <div style="background:white; margin:15px; border-radius:20px; overflow:hidden; box-shadow:0 10px 30px rgba(0,0,0,0.1);">
-                <img src="${d.foto || 'https://via.placeholder.com/400x250?text=Sem+Foto'}" style="width:100%; height:250px; object-fit:cover;">
-                <div style="padding:20px;">
-                    <div style="display:flex; justify-content:space-between; align-items:flex-start;">
-                        <h2 style="margin:0; color:var(--primary);">${d.nome}</h2>
-                        <span class="badge status-${d.status}">${d.status}</span>
-                    </div>
-                    <p style="color:#666; margin:10px 0;"><i class="fas fa-map-pin"></i> ${d.rua}, ${d.bairro}</p>
-                    
-                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:20px;">
-                        <a href="${linkWhats}" target="_blank" class="btn" style="background:#25D366; color:white;"><i class="fab fa-whatsapp"></i> ZAP</a>
-                        <button onclick="window.open('https://www.google.com/maps/dir/?api=1&destination=${d.lat},${d.lng}')" class="btn" style="background:#4285F4; color:white;"><i class="fas fa-route"></i> ROTA</button>
-                    </div>
-                    <button onclick="prepararEdicao('${d.id}')" class="btn btn-main" style="margin-top:15px;"><i class="fas fa-edit"></i> ATUALIZAR DADOS</button>
-                </div>
-            </div>
+            ${d.foto ? `<img src="${d.foto}" style="width:100%; border-radius:12px;">` : '<p>Sem foto</p>'}
+            <h2>${d.nome}</h2>
+            <p><strong>📍 Rua:</strong> ${d.rua}</p>
+            <a href="${linkWhats}" target="_blank" class="btn-whats-client"><i class="fab fa-whatsapp"></i> WHATSAPP CLIENTE</a>
+            <button onclick="window.open('https://www.google.com/maps/dir/?api=1&destination=$${d.lat},${d.lng}')" style="background:#007bff; color:white;">GPS GOOGLE</button>
+            <button onclick="prepararEdicao('${d.id}')" style="background:#ffc107; color:black;">EDITAR / TROCAR FOTO</button>
         `;
         document.getElementById('janela-detalhes').style.display = 'block';
     }
@@ -288,35 +223,18 @@
         document.getElementById('whats-cliente').value = d.whatsapp;
         document.getElementById('rua-cliente').value = d.rua;
         document.getElementById('bairro-cliente').value = d.bairro;
-        document.getElementById('status-entrega').value = d.status || 'pendente';
+        document.getElementById('ref-cliente').value = d.referencia || '';
         document.getElementById('edit-lat').value = d.lat;
         document.getElementById('edit-lng').value = d.lng;
-        document.getElementById('prev-foto').src = d.foto || '';
-        document.getElementById('prev-foto').style.display = d.foto ? 'block' : 'none';
         
-        document.getElementById('form-title').innerText = "Atualizar Entrega";
+        if(d.foto) {
+            document.getElementById('prev-foto').src = d.foto;
+            document.getElementById('prev-foto').style.display = 'block';
+        }
+
+        document.getElementById('form-title').innerText = "✏️ Editar " + d.nome;
         fecharOverlays();
         document.getElementById('janela-cadastro').style.display = 'block';
-    }
-
-    function filtrarMarcadores() {
-        const termo = document.getElementById('search-input').value.toLowerCase();
-        marcadores.forEach((m, index) => {
-            const d = dadosLocais[index];
-            const match = d.nome.toLowerCase().includes(termo) || d.bairro.toLowerCase().includes(termo);
-            match ? m.addTo(map) : map.removeLayer(m);
-        });
-    }
-
-    function irPara(aba) {
-        fecharOverlays(); toggleMenu();
-        if(aba === 'cadastro') {
-            document.getElementById('edit-id').value = '';
-            document.getElementById('nome-cliente').value = '';
-            document.getElementById('prev-foto').style.display = 'none';
-            document.getElementById('janela-cadastro').style.display = 'block';
-            fazerCheckin();
-        }
     }
 
     carregarDados();
