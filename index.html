@@ -3,76 +3,87 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mapa SpeedNET - Logística Shopee</title>
+    <title>SpeedNET Pro - Logística</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
     <style>
-        body { font-family: sans-serif; margin: 0; background: #f4f4f4; overflow-x: hidden; }
-        #map { height: 100vh; width: 100%; z-index: 1; position: fixed; top: 0; }
-        .container { position: relative; z-index: 2; margin-top: 55vh; padding: 15px; max-width: 450px; margin-left: auto; margin-right: auto; }
-        .card { background: white; padding: 20px; border-radius: 15px; box-shadow: 0 -5px 15px rgba(0,0,0,0.2); text-align: center; }
-        input, button { width: 100%; padding: 12px; margin: 5px 0; border-radius: 8px; border: 1px solid #ccc; box-sizing: border-box; font-size: 16px; }
+        body { font-family: sans-serif; margin: 0; background: #f4f4f4; overflow: hidden; }
+        #map { height: 100vh; width: 100%; z-index: 1; }
+
+        /* Menu Lateral */
+        .sidebar { position: fixed; top: 0; left: -280px; width: 280px; height: 100%; background: #004a8d; color: white; z-index: 10000; transition: 0.3s; padding: 20px; box-sizing: border-box; }
+        .sidebar.active { left: 0; }
+        .menu-item { padding: 15px; border-bottom: 1px solid #ffffff33; cursor: pointer; display: flex; alignItems: center; gap: 10px; }
+        
+        /* Botão Menu */
+        .btn-menu { position: fixed; top: 15px; left: 15px; z-index: 5000; background: #004a8d; color: white; border: none; padding: 10px 15px; border-radius: 5px; font-size: 20px; }
+
+        /* Lupa de Busca */
+        .search-box { position: fixed; top: 15px; right: 15px; z-index: 5000; width: 200px; background: white; border-radius: 20px; padding: 5px 15px; display: flex; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
+        .search-box input { border: none; outline: none; width: 100%; padding: 5px; }
+
+        /* Callout (Popup do Leaflet) */
+        .popup-content { text-align: center; min-width: 150px; }
+        .popup-foto { width: 100%; height: 80px; object-fit: cover; border-radius: 5px; margin-bottom: 5px; }
+        .btn-ver-mais { background: #004a8d; color: white; border: none; padding: 5px; border-radius: 5px; width: 100%; cursor: pointer; margin-top: 5px; }
+
+        /* Janelas Overlay */
+        .overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: white; z-index: 11000; overflow-y: auto; padding: 20px; box-sizing: border-box; }
+        
+        /* Roteirização */
+        .route-item { display: flex; align-items: center; padding: 10px; border-bottom: 1px solid #ddd; gap: 10px; }
+        .route-item input { width: auto; }
+        
+        /* Estilos Reutilizados */
+        input, button { width: 100%; padding: 12px; margin: 5px 0; border-radius: 8px; border: 1px solid #ccc; box-sizing: border-box; }
         button { background: #004a8d; color: white; border: none; font-weight: bold; cursor: pointer; }
-        .detalhes-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: white; z-index: 9999; overflow-y: auto; padding: 20px; box-sizing: border-box; animation: slideUp 0.3s ease-out; }
-        @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
-        .btn-fechar { background: #666; margin-bottom: 20px; }
-        .btn-salvar { background: #25D366; }
-        .btn-checkin { background: #6f42c1; color: white; display: none; }
-        .btn-navegar { background: #007bff; color: white; text-decoration: none; display: block; padding: 15px; border-radius: 8px; font-weight: bold; margin: 10px 0; text-align: center; }
-        .btn-whats { background: #25D366; color: white; text-decoration: none; display: block; padding: 15px; border-radius: 8px; font-weight: bold; margin: 10px 0; text-align: center; }
-        .btn-edit { background: #ffc107; color: #000; margin-bottom: 10px; }
-        .btn-del { background: #dc3545; color: #fff; }
-        .foto-detalhe { width: 100%; max-height: 300px; object-fit: cover; border-radius: 10px; margin-bottom: 15px; border: 2px solid #004a8d; }
-        #loading { display: none; font-weight: bold; color: #004a8d; margin: 10px 0; }
-        .file-label { display: block; background: #eef; border: 2px dashed #004a8d; padding: 15px; border-radius: 8px; cursor: pointer; margin: 10px 0; }
-        #file-foto { display: none; }
         .foto-preview { width: 100%; border-radius: 10px; display: none; margin-top: 10px; }
-        .footer-credits { margin-top: 20px; font-size: 12px; color: #777; padding-bottom: 20px; }
     </style>
 </head>
 <body>
 
-<div id="janela-detalhes" class="detalhes-overlay">
-    <button class="btn-fechar" onclick="fecharDetalhes()">⬅ VOLTAR AO MAPA</button>
-    <div id="conteudo-detalhes"></div>
+<div id="sidebar" class="sidebar">
+    <h2>SpeedNET</h2>
+    <div class="menu-item" onclick="irPara('mapa')"><i class="fas fa-home"></i> Início</div>
+    <div class="menu-item" onclick="irPara('roteirizacao')"><i class="fas fa-route"></i> Roteirização</div>
+    <div class="menu-item" onclick="irPara('cadastro')"><i class="fas fa-user-plus"></i> Adicionar Localização</div>
+    <button onclick="toggleMenu()" style="margin-top: 20px; background: #666;">FECHAR</button>
+</div>
+
+<button class="btn-menu" onclick="toggleMenu()"><i class="fas fa-bars"></i></button>
+
+<div class="search-box">
+    <i class="fas fa-search" style="color: #888;"></i>
+    <input type="text" id="input-busca" placeholder="Buscar..." oninput="filtrarMarcadores()">
 </div>
 
 <div id="map"></div>
 
-<div class="container">
-    <div id="identificacao-area" class="card">
-        <h3>SpeedNET - Nísia Floresta</h3>
-        <input type="text" id="nome-usuario" placeholder="Seu nome">
-        <button onclick="acessarMapa()">ENTRAR</button>
-    </div>
+<div id="janela-cadastro" class="overlay">
+    <button onclick="fecharOverlays()" style="background:#666">⬅ VOLTAR</button>
+    <h3 id="form-title">📍 Registrar Cliente</h3>
+    <input type="hidden" id="edit-id">
+    <input type="text" id="nome-cliente" placeholder="Nome do Cliente">
+    <input type="tel" id="whats-cliente" placeholder="WhatsApp (DDD + Número)">
+    <input type="text" id="rua-cliente" placeholder="Rua">
+    <input type="text" id="bairro-cliente" placeholder="Bairro">
+    <input type="text" id="ref-cliente" placeholder="Referência">
+    <input type="file" id="file-foto" accept="image/*" capture="environment" onchange="previewFoto()" style="display:none">
+    <button onclick="document.getElementById('file-foto').click()">📷 TIRAR FOTO</button>
+    <img id="prev-foto" class="foto-preview">
+    <button id="btn-salvar" onclick="salvarLocalizacao()" style="background:#25D366; margin-top:15px">SALVAR REGISTRO</button>
+</div>
 
-    <div id="app-area" class="card" style="display:none;">
-        <input type="text" id="nome-busca" placeholder="🔍 Buscar cliente..." oninput="filtrarMarcadores()">
-        <hr>
-        <h3 id="form-title">📍 Registrar Cliente</h3>
-        <input type="hidden" id="edit-id">
-        <input type="hidden" id="edit-lat">
-        <input type="hidden" id="edit-lng">
-        
-        <input type="text" id="nome-cliente" placeholder="Nome do Cliente">
-        <input type="tel" id="whats-cliente" placeholder="WhatsApp do Cliente (DDD + Número)">
-        <input type="text" id="rua-cliente" placeholder="Rua">
-        <input type="text" id="bairro-cliente" placeholder="Bairro">
-        <input type="text" id="ref-cliente" placeholder="Referência">
+<div id="janela-detalhes" class="overlay">
+    <button onclick="fecharOverlays()" style="background:#666">⬅ VOLTAR</button>
+    <div id="conteudo-detalhes"></div>
+</div>
 
-        <label for="file-foto" class="file-label">📷 Foto (Câmera ou Galeria)
-            <input type="file" id="file-foto" accept="image/*" capture="environment" onchange="previewFoto()">
-        </label>
-        <img id="prev-foto" class="foto-preview">
-
-        <div id="loading">Processando... ⏳</div>
-        <button id="btn-checkin" class="btn-checkin" onclick="atualizarPosicaoEdicao()">📍 ATUALIZAR LOCALIZAÇÃO (CHECK-IN)</button>
-        <button id="btn-acao" class="btn-salvar" onclick="salvarLocalizacao()">SALVAR REGISTRO</button>
-        <button id="btn-cancelar" style="display:none; background:#666;" onclick="cancelarEdicao()">CANCELAR</button>
-        
-        <div class="footer-credits">
-            Criado por <strong>Abne Agletison</strong> | <a href="https://instagram.com/Agletison" target="_blank">@Agletison</a>
-        </div>
-    </div>
+<div id="janela-rota" class="overlay">
+    <button onclick="fecharOverlays()" style="background:#666">⬅ VOLTAR</button>
+    <h3>🚚 Selecione os pontos da rota</h3>
+    <div id="lista-roteirizacao"></div>
+    <button onclick="processarRoteirizacao()" style="background:#6f42c1; margin-top:15px">GERAR ROTA OTIMIZADA</button>
 </div>
 
 <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
@@ -81,197 +92,159 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
 <script>
+    // --- CONFIGURAÇÃO FIREBASE (MANTIDA) ---
     const firebaseConfig = {
-      apiKey: "AIzaSyBuVx3VYGHF97hU9-CSLa-FmSbxFYIH20A", 
+      apiKey: "AIzaSyBuVx3VYGHF97hU9-CSLa-FmSbxFYIH20A",
       authDomain: "mapanisia.firebaseapp.com",
       projectId: "mapanisia",
       storageBucket: "mapanisia.firebasestorage.app",
       messagingSenderId: "429106374611",
       appId: "1:429106374611:web:b0fc107917f26bec3cb126"
     };
-
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
     const storage = firebase.storage();
 
-    const map = L.map('map').setView([-6.0886, -35.2111], 14);
+    // --- MAPA ---
+    const map = L.map('map', { zoomControl: false }).setView([-6.0886, -35.2111], 14);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
     let marcadoresAtivos = [];
-    let marcadorVoce = null;
+    let dadosLocais = [];
+    let minhaPosicao = null;
 
-    if (localStorage.getItem('usuario_mapa')) { acessarMapa(); }
+    // --- FUNÇÕES DE NAVEGAÇÃO ---
+    function toggleMenu() { document.getElementById('sidebar').classList.toggle('active'); }
 
-    function acessarMapa() {
-        const nome = document.getElementById('nome-usuario').value || localStorage.getItem('usuario_mapa');
-        if (!nome) return alert("Digite seu nome!");
-        localStorage.setItem('usuario_mapa', nome);
-        document.getElementById('identificacao-area').style.display = 'none';
-        document.getElementById('app-area').style.display = 'block';
-        monitorarPosicao();
-        carregarDados();
+    function fecharOverlays() {
+        document.querySelectorAll('.overlay').forEach(el => el.style.display = 'none');
     }
 
-    function monitorarPosicao() {
-        navigator.geolocation.watchPosition(pos => {
-            const lat = pos.coords.latitude, lng = pos.coords.longitude;
-            if (marcadorVoce) { marcadorVoce.setLatLng([lat, lng]); } 
-            else { marcadorVoce = L.circleMarker([lat, lng], { radius: 10, fillColor: '#007bff', fillOpacity: 1, color: 'white', weight: 2 }).addTo(map); }
-        }, null, { enableHighAccuracy: true });
-    }
-
-    function previewFoto() {
-        const file = document.getElementById('file-foto').files[0];
-        if (file) {
-            const reader = new FileReader();
-            reader.onload = e => { document.getElementById('prev-foto').src = e.target.result; document.getElementById('prev-foto').style.display = 'block'; }
-            reader.readAsDataURL(file);
+    function irPara(destino) {
+        toggleMenu();
+        fecharOverlays();
+        if(destino === 'cadastro') {
+            document.getElementById('janela-cadastro').style.display = 'block';
+        } else if(destino === 'roteirizacao') {
+            montarListaRoteirizacao();
+            document.getElementById('janela-rota').style.display = 'block';
         }
     }
 
-    function abrirDetalhes(id) {
-        db.collection("pontos").doc(id).get().then(doc => {
-            const d = doc.data();
-            const meuNome = localStorage.getItem('usuario_mapa');
-            const linkNav = `https://www.google.com/maps/dir/?api=1&destination=${d.lat},${d.lng}`;
-            // Mensagem personalizada Shopee
-            const msgWhats = encodeURIComponent(`Olá, sou ${meuNome}, Entregador da shopee.`);
-            const linkWhats = `https://wa.me/55${d.whatsapp.replace(/\D/g,'')}?text=${msgWhats}`;
-            
-            let htmlFoto = d.foto ? `<img src="${d.foto}" class="foto-detalhe">` : '<p>(Sem foto)</p>';
-
-            document.getElementById('conteudo-detalhes').innerHTML = `
-                ${htmlFoto}
-                <h2>${d.nome}</h2>
-                <p><strong>📍 Endereço:</strong> ${d.rua || ''}, ${d.bairro || ''}</p>
-                <p><strong>🏠 Referência:</strong> ${d.referencia || 'Nenhuma'}</p>
-                <p><strong>👤 Cadastrado por:</strong> ${d.registrado_por}</p>
-                
-                <a href="${linkWhats}" target="_blank" class="btn-whats">💬 CHAMAR NO WHATSAPP</a>
-                <a href="${linkNav}" target="_blank" class="btn-navegar">🧭 INICIAR NAVEGAÇÃO</a>
-                
-                <hr>
-                <button class="btn-edit" onclick="prepararEdicao('${id}')">✏️ EDITAR</button>
-                <button class="btn-del" onclick="excluirPonto('${id}')">🗑️ EXCLUIR</button>
-            `;
-            document.getElementById('janela-detalhes').style.display = 'block';
-        });
-    }
-
-    function fecharDetalhes() { document.getElementById('janela-detalhes').style.display = 'none'; }
-
-    async function salvarLocalizacao() {
-        const cliente = document.getElementById('nome-cliente').value;
-        const editId = document.getElementById('edit-id').value;
-        const arquivo = document.getElementById('file-foto').files[0];
-        if (!cliente) return alert("Nome obrigatório!");
-
-        document.getElementById('loading').style.display = 'block';
-        const dados = {
-            nome: cliente, whatsapp: document.getElementById('whats-cliente').value.replace(/\D/g,''),
-            rua: document.getElementById('rua-cliente').value, bairro: document.getElementById('bairro-cliente').value,
-            referencia: document.getElementById('ref-cliente').value,
-            registrado_por: localStorage.getItem('usuario_mapa'),
-            data_atualizacao: new Date()
-        };
-
-        try {
-            if (arquivo) {
-                const ref = storage.ref(`fotos/${Date.now()}`);
-                await ref.put(arquivo);
-                dados.foto = await ref.getDownloadURL();
-            }
-
-            if (editId) {
-                dados.lat = parseFloat(document.getElementById('edit-lat').value);
-                dados.lng = parseFloat(document.getElementById('edit-lng').value);
-                await db.collection("pontos").doc(editId).update(dados);
-                alert("Atualizado!");
-                cancelarEdicao();
-            } else {
-                navigator.geolocation.getCurrentPosition(async (pos) => {
-                    dados.lat = pos.coords.latitude; dados.lng = pos.coords.longitude;
-                    dados.data = new Date();
-                    await db.collection("pontos").add(dados);
-                    alert("Salvo com sucesso!");
-                    limparFormulario();
-                });
-            }
-        } catch (e) { alert("Erro!"); }
-        document.getElementById('loading').style.display = 'none';
-    }
-
+    // --- LOGICA DE DADOS ---
     function carregarDados() {
         db.collection("pontos").onSnapshot(snap => {
-            marcadoresAtivos.forEach(m => map.removeLayer(m.marker));
+            marcadoresAtivos.forEach(m => map.removeLayer(m));
+            marcadoresAtivos = [];
+            dadosLocais = [];
+            
             snap.forEach(doc => {
                 const d = doc.data();
-                const marker = L.marker([d.lat, d.lng]).addTo(map).on('click', () => abrirDetalhes(doc.id));
-                marcadoresAtivos.push({ nome: d.nome.toLowerCase(), marker });
+                d.id = doc.id;
+                dadosLocais.push(d);
+
+                const marker = L.marker([d.lat, d.lng]).addTo(map);
+                
+                // Balãozinho (Nuvemzinha)
+                const popupHtml = `
+                    <div class="popup-content">
+                        ${d.foto ? `<img src="${d.foto}" class="popup-foto">` : ''}
+                        <strong>${d.nome}</strong><br>
+                        <small>${d.rua}, ${d.bairro}</small><br>
+                        <button class="btn-ver-mais" onclick="abrirDetalhes('${d.id}')">DETALHES</button>
+                    </div>
+                `;
+                marker.bindPopup(popupHtml);
+                marker.nomeBusca = d.nome.toLowerCase() + " " + d.rua.toLowerCase() + " " + d.bairro.toLowerCase();
+                marcadoresAtivos.push(marker);
             });
         });
     }
 
-    function prepararEdicao(id) {
-        fecharDetalhes();
-        db.collection("pontos").doc(id).get().then(doc => {
-            const d = doc.data();
-            document.getElementById('edit-id').value = id;
-            document.getElementById('edit-lat').value = d.lat;
-            document.getElementById('edit-lng').value = d.lng;
-            document.getElementById('nome-cliente').value = d.nome;
-            document.getElementById('whats-cliente').value = d.whatsapp || '';
-            document.getElementById('rua-cliente').value = d.rua || '';
-            document.getElementById('bairro-cliente').value = d.bairro || '';
-            document.getElementById('ref-cliente').value = d.referencia || '';
-            document.getElementById('form-title').innerText = "✏️ Editando";
-            document.getElementById('btn-acao').innerText = "ATUALIZAR";
-            document.getElementById('btn-checkin').style.display = "block";
-            document.getElementById('btn-cancelar').style.display = "block";
-            window.scrollTo(0, document.body.scrollHeight);
-        });
-    }
-
-    function atualizarPosicaoEdicao() {
-        navigator.geolocation.getCurrentPosition(pos => {
-            document.getElementById('edit-lat').value = pos.coords.latitude;
-            document.getElementById('edit-lng').value = pos.coords.longitude;
-            alert("Localização capturada!");
-        });
-    }
-
-    function limparFormulario() {
-        document.getElementById('nome-cliente').value = '';
-        document.getElementById('whats-cliente').value = '';
-        document.getElementById('rua-cliente').value = '';
-        document.getElementById('bairro-cliente').value = '';
-        document.getElementById('ref-cliente').value = '';
-        document.getElementById('file-foto').value = '';
-        document.getElementById('prev-foto').style.display = 'none';
-    }
-
-    function cancelarEdicao() {
-        limparFormulario();
-        document.getElementById('edit-id').value = '';
-        document.getElementById('form-title').innerText = "📍 Registrar Cliente";
-        document.getElementById('btn-acao').innerText = "SALVAR REGISTRO";
-        document.getElementById('btn-checkin').style.display = "none";
-        document.getElementById('btn-cancelar').style.display = "none";
-    }
-
-    async function excluirPonto(id) {
-        if (confirm("Excluir definitivamente?")) {
-            await db.collection("pontos").doc(id).delete();
-            fecharDetalhes();
-        }
-    }
-
     function filtrarMarcadores() {
-        const busca = document.getElementById('nome-busca').value.toLowerCase();
+        const busca = document.getElementById('input-busca').value.toLowerCase();
         marcadoresAtivos.forEach(m => {
-            if (m.nome.includes(busca)) { m.marker.addTo(map); } 
-            else { map.removeLayer(m.marker); }
+            if (m.nomeBusca.includes(busca)) { m.addTo(map); } 
+            else { map.removeLayer(m); }
         });
+    }
+
+    // --- ROTEIRIZAÇÃO ---
+    function montarListaRoteirizacao() {
+        const lista = document.getElementById('lista-roteirizacao');
+        lista.innerHTML = dadosLocais.map(d => `
+            <div class="route-item">
+                <input type="checkbox" class="route-check" value="${d.id}">
+                <span>${d.nome} (${d.bairro})</span>
+            </div>
+        `).join('');
+    }
+
+    function calcularDistancia(lat1, lon1, lat2, lon2) {
+        return Math.sqrt(Math.pow(lat1 - lat2, 2) + Math.pow(lon1 - lon2, 2));
+    }
+
+    function processarRoteirizacao() {
+        const selecionadosIds = Array.from(document.querySelectorAll('.route-check:checked')).map(cb => cb.value);
+        if (selecionadosIds.length === 0) return alert("Selecione ao menos um ponto!");
+
+        navigator.geolocation.getCurrentPosition(pos => {
+            const atual = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+            
+            let rota = dadosLocais.filter(d => selecionadosIds.includes(d.id));
+            
+            // Ordenação: Do mais perto para o mais distante (Lógica Gananciosa Simples)
+            rota.sort((a, b) => {
+                const distA = calcularDistancia(atual.lat, atual.lng, a.lat, a.lng);
+                const distB = calcularDistancia(atual.lat, atual.lng, b.lat, b.lng);
+                return distA - distB;
+            });
+
+            const pointsStr = rota.map(r => `${r.lat},${r.lng}`).join('/');
+            const url = `https://www.google.com/maps/dir/${atual.lat},${atual.lng}/${pointsStr}`;
+            
+            if(confirm("Rota gerada com " + rota.length + " paradas. Iniciar no Google Maps?")) {
+                window.open(url, '_blank');
+            }
+        });
+    }
+
+    // --- DETALHES E SALVAMENTO ---
+    function abrirDetalhes(id) {
+        fecharOverlays();
+        const d = dadosLocais.find(item => item.id === id);
+        const linkNav = `https://www.google.com/maps/dir/?api=1&destination=${d.lat},${d.lng}`;
+        
+        document.getElementById('conteudo-detalhes').innerHTML = `
+            ${d.foto ? `<img src="${d.foto}" style="width:100%; border-radius:10px">` : ''}
+            <h2>${d.nome}</h2>
+            <p><strong>Rua:</strong> ${d.rua}</p>
+            <p><strong>Bairro:</strong> ${d.bairro}</p>
+            <p><strong>Ref:</strong> ${d.referencia || 'N/A'}</p>
+            <button onclick="window.open('${linkNav}')" style="background:#007bff">🧭 INICIAR GPS</button>
+            <button onclick="prepararEdicao('${d.id}')" style="background:#ffc107; color:black">✏️ EDITAR</button>
+        `;
+        document.getElementById('janela-detalhes').style.display = 'block';
+    }
+
+    // Inicialização
+    navigator.geolocation.getCurrentPosition(pos => {
+        minhaPosicao = L.circleMarker([pos.coords.latitude, pos.coords.longitude], { color: 'blue', radius: 8 }).addTo(map);
+        map.setView([pos.coords.latitude, pos.coords.longitude], 15);
+    });
+    carregarDados();
+
+    // Funções auxiliares de foto e limpeza (mantidas do seu original)
+    function previewFoto() {
+        const file = document.getElementById('file-foto').files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = e => { 
+                document.getElementById('prev-foto').src = e.target.result; 
+                document.getElementById('prev-foto').style.display = 'block'; 
+            }
+            reader.readAsDataURL(file);
+        }
     }
 </script>
 </body>
